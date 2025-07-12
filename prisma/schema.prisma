@@ -13,3 +13,358 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Core business entities
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  username    String   @unique
+  firstName   String?
+  lastName    String?
+  role        UserRole @default(ANALYST)
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  createdCustomers  Customer[]
+  createdRFPs       RFP[]
+  pricingAnalyses   PricingAnalysis[]
+  
+  @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Customer {
+  id                    String      @id @default(cuid())
+  hoaName               String
+  fullAddress           String
+  city                  String?
+  state                 String?
+  zipCode               String?
+  latitude              Float?
+  longitude             Float?
+  monthlyRevenue        Decimal     @db.Decimal(10,2)
+  avgCompletionTime     Float       // minutes
+  serviceStatus         ServiceStatus @default(PENDING)
+  unitType              UnitType?
+  customerType          CustomerType @default(HOA)
+  numberOfUnits         Int?
+  contactEmail          String?
+  contactPhone          String?
+  contractStartDate     DateTime?
+  contractEndDate       DateTime?
+  isActive              Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  createdById           String
+
+  // Relationships
+  createdBy           User                @relation(fields: [createdById], references: [id])
+  services            CustomerService[]
+  rfps                RFP[]
+  pricingAnalyses     PricingAnalysis[]
+  routeAssignments    RouteAssignment[]
+  serviceHistory      ServiceHistory[]
+  
+  @@map("customers")
+  @@index([hoaName])
+  @@index([serviceStatus])
+  @@index([customerType])
+  @@index([latitude, longitude])
+  @@index([monthlyRevenue])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model CustomerService {
+  id                  String   @id @default(cuid())
+  customerId          String
+  serviceType         ServiceType
+  frequency           ServiceFrequency
+  trashSize           Int?     // gallons
+  recyclingSize       Int?     // gallons
+  yardWasteRequired   Boolean  @default(false)
+  isWalkout           Boolean  @default(false)
+  isGated             Boolean  @default(false)
+  hasSpecialContainers Boolean @default(false)
+  specialRequirements Json?
+  monthlyPrice        Decimal  @db.Decimal(10,2)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relationships
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("customer_services")
+  @@index([customerId])
+  @@index([serviceType])
+  @@index([frequency])
+  @@index([isActive])
+}
+
+model RFP {
+  id                    String     @id @default(cuid())
+  customerId            String?
+  title                 String
+  description           Text?
+  location              String
+  estimatedHomes        Int?
+  unitType              UnitType?
+  serviceType           ServiceType
+  frequency             ServiceFrequency
+  contractValue         Decimal?   @db.Decimal(12,2)
+  contractLength        Int?       // months
+  startDate             DateTime?
+  endDate               DateTime?
+  bidDeadline           DateTime?
+  status                RFPStatus  @default(DRAFT)
+  requirements          Json?
+  documents             Json?      // file paths/URLs
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  createdById           String
+
+  // Relationships
+  customer          Customer?         @relation(fields: [customerId], references: [id])
+  createdBy         User              @relation(fields: [createdById], references: [id])
+  pricingAnalyses   PricingAnalysis[]
+  
+  @@map("rfps")
+  @@index([status])
+  @@index([serviceType])
+  @@index([bidDeadline])
+  @@index([createdAt])
+}
+
+model PricingAnalysis {
+  id                  String   @id @default(cuid())
+  customerId          String?
+  rfpId               String?
+  analysisType        AnalysisType
+  unitCount           Int
+  basePrice           Decimal  @db.Decimal(10,2)
+  walkoutPremium      Decimal  @db.Decimal(10,2) @default(0)
+  gatedPremium        Decimal  @db.Decimal(10,2) @default(0)
+  specialContainerPremium Decimal @db.Decimal(10,2) @default(0)
+  totalMonthlyRevenue Decimal  @db.Decimal(10,2)
+  marginPercent       Float
+  confidenceLevel     ConfidenceLevel
+  riskFlags           Json?
+  recommendations     Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  createdById         String
+
+  // Relationships
+  customer  Customer? @relation(fields: [customerId], references: [id])
+  rfp       RFP?      @relation(fields: [rfpId], references: [id])
+  createdBy User      @relation(fields: [createdById], references: [id])
+  
+  @@map("pricing_analyses")
+  @@index([customerId])
+  @@index([rfpId])
+  @@index([analysisType])
+  @@index([confidenceLevel])
+  @@index([createdAt])
+}
+
+model Route {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  driverId        String?
+  vehicleId       String?
+  estimatedTime   Int?     // minutes
+  estimatedMiles  Float?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  assignments RouteAssignment[]
+  
+  @@map("routes")
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([isActive])
+}
+
+model RouteAssignment {
+  id         String   @id @default(cuid())
+  routeId    String
+  customerId String
+  order      Int      // stop order on route
+  estimatedTime Int?  // minutes for this stop
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationships
+  route    Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("route_assignments")
+  @@unique([routeId, customerId])
+  @@index([routeId])
+  @@index([customerId])
+  @@index([order])
+}
+
+model ServiceHistory {
+  id              String      @id @default(cuid())
+  customerId      String
+  serviceDate     DateTime
+  serviceType     ServiceType
+  completionTime  Int?        // minutes
+  driverId        String?
+  vehicleId       String?
+  status          ServiceHistoryStatus
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relationships
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("service_history")
+  @@index([customerId])
+  @@index([serviceDate])
+  @@index([serviceType])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String   // table/model name
+  resourceId String?
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id])
+  
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+  @@index([key])
+  @@index([isActive])
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  ANALYST
+  OPERATOR
+  VIEWER
+}
+
+enum ServiceStatus {
+  PENDING
+  SERVICED
+  CANCELLED
+  SUSPENDED
+}
+
+enum UnitType {
+  SINGLE_FAMILY_HOMES
+  TOWNHOMES
+  CONDOS
+  MIXED_RESIDENTIAL
+  COMMERCIAL
+  UNKNOWN
+}
+
+enum CustomerType {
+  HOA
+  SUBSCRIPTION
+  COMMERCIAL
+  MUNICIPAL
+}
+
+enum ServiceType {
+  TRASH
+  RECYCLING
+  YARD_WASTE
+  BULK_PICKUP
+  COMMERCIAL_DUMPSTER
+}
+
+enum ServiceFrequency {
+  WEEKLY
+  TWICE_WEEKLY
+  THREE_TIMES_WEEKLY
+  MONTHLY
+  ON_DEMAND
+}
+
+enum RFPStatus {
+  DRAFT
+  PUBLISHED
+  BIDDING
+  AWARDED
+  CANCELLED
+  COMPLETED
+}
+
+enum AnalysisType {
+  INITIAL_QUOTE
+  RENEWAL_ANALYSIS
+  COMPETITIVE_BID
+  ROUTE_OPTIMIZATION
+  PROFITABILITY_REVIEW
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ServiceHistoryStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  CANCELLED
+}

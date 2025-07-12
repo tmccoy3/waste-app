@@ -1,6 +1,29 @@
 # Waste Ops Intelligence Platform
 
-A comprehensive waste management operations intelligence platform built with Next.js, TypeScript, and modern React patterns.
+A comprehensive waste management operations intelligence platform built with Next.js 15, TypeScript, and modern React patterns. This enterprise-grade solution provides real-time analytics, dynamic pricing, and operational insights for waste management companies.
+
+## 🚀 Recent Updates & Optimizations
+
+### ✅ Dashboard Performance Optimization
+- **React.memo optimization**: All dashboard components are now memoized for optimal re-rendering
+- **Custom hooks**: `useOptimizedDashboard` hook centralizes data management with comprehensive memoization
+- **Modular components**: Separated metrics, charts, and tables into reusable components
+- **Error boundaries**: Comprehensive error handling with graceful fallbacks
+- **Zod validation**: Runtime type safety for all data processing
+
+### ✅ UI/UX Enhancements
+- **CSS Variable Migration**: Removed all CSS variables, replaced with direct Tailwind classes
+- **Shadcn/UI Integration**: Complete component library implementation with consistent styling
+- **Responsive Design**: Mobile-first approach with optimized layouts for all screen sizes
+- **Interactive Elements**: Enhanced tooltips, loading states, and user feedback
+- **Professional Styling**: Tableau-inspired color palette and modern design system
+
+### ✅ Database Architecture
+- **Comprehensive Prisma Schema**: 10+ models with proper relationships and indexes
+- **Performance Optimization**: Strategic indexes for common queries
+- **Data Integrity**: Foreign key constraints and cascade deletes
+- **Audit Trail**: Complete audit logging for compliance and tracking
+- **Scalability**: Designed for enterprise-level data volumes
 
 ## 🏗️ Architecture Overview
 
@@ -8,37 +31,40 @@ This platform follows a modular, scalable architecture designed for enterprise-g
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Frontend Layer                          │
+│                   Frontend Layer                            │
 ├─────────────────────────────────────────────────────────────┤
-│  • Next.js 15 + React 19 + TypeScript                      │
-│  • Tailwind CSS + shadcn/ui components                     │
-│  • Modular metric components with fallback states          │
-│  • Error boundaries & centralized error handling           │
-│  • Custom hooks for shared business logic                  │
+│  • Next.js 15 + React 19 + TypeScript                     │
+│  • Tailwind CSS + Shadcn/UI components                    │
+│  • Optimized components with React.memo                   │
+│  • Error boundaries & centralized error handling          │
+│  • Custom hooks for shared business logic                 │
+│  • Zod validation for runtime type safety                 │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
-│                   Services Layer                            │
+│                   Services Layer                           │
 ├─────────────────────────────────────────────────────────────┤
-│  • MetricsService (singleton with caching)                 │
-│  • PricingService (microservice architecture)              │
-│  • ETL Pipeline (BigQuery integration)                     │
-│  • Authentication & RBAC                                   │
+│  • Optimized dashboard hook with memoization              │
+│  • Smart pricing engine with advanced caching             │
+│  • ETL Pipeline (BigQuery integration)                    │
+│  • Authentication & RBAC                                  │
+│  • Comprehensive validation schemas                       │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
-│                     API Layer                               │
+│                     API Layer                              │
 ├─────────────────────────────────────────────────────────────┤
-│  • REST API endpoints                                       │
-│  • Request tracing & monitoring                            │
-│  • Rate limiting & security                                │
-│  • Error logging (Sentry integration)                      │
+│  • REST API endpoints with validation                     │
+│  • Request tracing & monitoring                           │
+│  • Rate limiting & security                               │
+│  • Error logging (Sentry integration)                     │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
-│                    Data Layer                               │
+│                    Data Layer                              │
 ├─────────────────────────────────────────────────────────────┤
-│  • PostgreSQL (primary database)                           │
-│  • Redis (caching & session storage)                       │
-│  • BigQuery (data warehouse)                               │
-│  • Prisma ORM                                              │
+│  • PostgreSQL with optimized schema                       │
+│  • Redis (caching & session storage)                      │
+│  • BigQuery (data warehouse)                              │
+│  • Prisma ORM with comprehensive models                   │
+│  • Strategic indexes for performance                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,17 +72,26 @@ This platform follows a modular, scalable architecture designed for enterprise-g
 
 ### Frontend
 - **Next.js 15** - React framework with App Router
-- **React 19** - Component library
-- **TypeScript** - Type safety
+- **React 19** - Component library with latest optimizations
+- **TypeScript** - Type safety and developer experience
 - **Tailwind CSS** - Utility-first CSS framework
-- **shadcn/ui** - Component library built on Radix UI
+- **Shadcn/UI** - Component library built on Radix UI
+- **Recharts** - Data visualization library
+- **Zod** - Runtime type validation
 - **Lucide React** - Icon library
 
 ### Backend
 - **Node.js** - Runtime environment
-- **Prisma** - Database ORM
-- **PostgreSQL** - Primary database
+- **Prisma** - Database ORM with comprehensive schema
+- **PostgreSQL** - Primary database with optimized indexes
 - **Redis** - Caching and session storage
+
+### Performance & Optimization
+- **React.memo** - Component memoization
+- **useMemo/useCallback** - Hook optimization
+- **Custom hooks** - Shared business logic
+- **Error boundaries** - Graceful error handling
+- **Zod validation** - Runtime type safety
 
 ### DevOps & Monitoring
 - **Sentry** - Error tracking and performance monitoring
@@ -74,15 +109,20 @@ This platform follows a modular, scalable architecture designed for enterprise-g
 src/
 ├── app/                    # Next.js app router pages
 │   ├── api/               # API routes
-│   ├── dashboard/         # Dashboard pages
+│   ├── dashboard/         # Optimized dashboard pages
 │   └── globals.css        # Global styles
 ├── components/            # React components
-│   ├── ui/               # Reusable UI components
-│   ├── metrics/          # Metric-specific components
-│   └── ErrorBoundary.tsx # Error handling
+│   ├── ui/               # Shadcn/UI components (CSS vars removed)
+│   ├── dashboard/        # Optimized dashboard components
+│   ├── ErrorBoundary.tsx # Error handling
+│   └── ...               # Other components
 ├── hooks/                # Custom React hooks
-│   └── useMetrics.ts     # Shared metrics service
+│   ├── useOptimizedDashboard.ts # Main dashboard hook
+│   └── useMetrics.ts     # Metrics service
 ├── lib/                  # Utility libraries
+│   ├── validations.ts    # Zod validation schemas
+│   ├── smart-pricing-engine.ts # Enhanced pricing engine
+│   └── ...               # Other utilities
 ├── utils/                # Helper functions
 └── generated/            # Generated types/code
 ```
@@ -128,6 +168,27 @@ src/
 6. **Access the application**
    - Frontend: http://localhost:3000
    - API: http://localhost:3000/api
+   - Dashboard: http://localhost:3000/dashboard
+
+## 📊 Performance Optimizations
+
+### Component Optimization
+- **React.memo**: All dashboard components are memoized to prevent unnecessary re-renders
+- **useCallback**: Event handlers are memoized to maintain referential equality
+- **useMemo**: Expensive calculations are memoized (metrics, charts, pagination)
+- **Custom hooks**: Shared logic extracted into reusable hooks
+
+### Data Management
+- **Optimized fetching**: Single data fetch with comprehensive error handling
+- **Memoized filtering**: Search and pagination logic optimized
+- **Caching strategy**: Smart pricing engine with 5-minute cache expiry
+- **Validation**: Zod schemas for runtime type safety
+
+### Database Performance
+- **Strategic indexes**: Optimized for common query patterns
+- **Proper relationships**: Foreign keys with cascade deletes
+- **Decimal precision**: Financial data stored with proper decimal types
+- **Query optimization**: Indexes on frequently queried fields
 
 ## 🔐 Security & Authentication
 
@@ -142,6 +203,7 @@ All sensitive configuration is stored in environment variables:
 - **Admin**: Full access to all features and configuration
 - **Analyst**: Read-only access to analytics and reports
 - **Operator**: Access to route metrics and operational data
+- **Viewer**: Limited dashboard access
 
 ### Security Headers
 - CSP (Content Security Policy)
@@ -149,88 +211,151 @@ All sensitive configuration is stored in environment variables:
 - X-Frame-Options
 - X-Content-Type-Options
 
-## 📊 Monitoring & Observability
+## 📈 Data Models & Relationships
 
-### Error Tracking
-- **Sentry**: Centralized error reporting and performance monitoring
-- **Error Boundaries**: React components that catch and handle errors gracefully
-- **Custom Error Logging**: Structured error reports with context
+### Core Models
+- **User**: Authentication and authorization
+- **Customer**: Core business entities with location data
+- **CustomerService**: Service configurations and pricing
+- **RFP**: Request for proposal management
+- **PricingAnalysis**: Pricing calculations and recommendations
+- **Route**: Route management and optimization
+- **ServiceHistory**: Historical service data
+- **AuditLog**: Compliance and tracking
 
-### Analytics
-- **PostHog**: User behavior analytics (optional)
-- **Custom Metrics**: Business-specific KPIs and performance indicators
+### Key Features
+- **Comprehensive validation**: Zod schemas for all data types
+- **Optimized queries**: Strategic indexes for performance
+- **Data integrity**: Foreign key constraints and relationships
+- **Audit trail**: Complete change tracking
+- **Scalability**: Designed for enterprise data volumes
 
-### Performance
-- **Caching Strategy**: Redis for frequently accessed data
-- **Database Optimization**: Query optimization and indexing
-- **CDN**: Static asset delivery optimization
-
-## 🔄 Development Workflow
+## 🧪 Testing & Quality
 
 ### Code Quality
 - **TypeScript**: Strict type checking
 - **ESLint**: Code linting and formatting
 - **Prettier**: Code formatting
-- **Husky**: Git hooks for pre-commit validation
+- **Zod validation**: Runtime type safety
 
-### Testing
-- **Jest**: Unit testing framework
-- **React Testing Library**: Component testing
-- **Cypress**: End-to-end testing
+### Performance Testing
+- **React DevTools**: Component profiling
+- **Next.js Analytics**: Performance monitoring
+- **Database queries**: Optimized with proper indexes
+
+## 🔄 Development Workflow
+
+### Optimization Features
+- **Hot reload**: Fast development iteration
+- **Error boundaries**: Graceful error handling in development
+- **TypeScript**: IntelliSense and type safety
+- **Validation**: Immediate feedback on data issues
 
 ### Deployment
-- **Vercel/Netlify**: Frontend deployment
+- **Production build**: Optimized for performance
 - **Docker**: Containerization for production
 - **CI/CD**: Automated testing and deployment
+- **Environment management**: Secure configuration handling
 
-## 📈 Performance Optimization
+## 🎯 Business Intelligence Features
 
-### Caching Strategy
-- **Redis**: Server-side caching for expensive calculations
-- **React Query**: Client-side data fetching and caching
-- **Memoization**: Component and calculation memoization
+### Dashboard Analytics
+- **Real-time metrics**: Live customer and revenue data
+- **Interactive charts**: Revenue trends and efficiency scores
+- **Advanced filtering**: Search and pagination with performance optimization
+- **Export capabilities**: CSV and PDF generation
 
-### Bundle Optimization
-- **Code Splitting**: Dynamic imports for large components
-- **Tree Shaking**: Unused code elimination
-- **Image Optimization**: Next.js image optimization
+### Pricing Intelligence
+- **Smart pricing engine**: Unit-based pricing with caching
+- **Risk assessment**: Confidence levels and risk flags
+- **Competitive analysis**: Benchmark validation
+- **What-if scenarios**: Business valuation simulator
 
-## 🔧 Configuration
+### Operational Insights
+- **Route optimization**: Assignment and efficiency tracking
+- **Service history**: Complete audit trail
+- **Performance metrics**: KPIs and trend analysis
+- **Compliance reporting**: Audit logs and system tracking
+
+## 🔧 Configuration & Customization
 
 ### Feature Flags
-Environment-based feature toggling for gradual rollouts:
-- `FEATURE_ANALYTICS_ENABLED`
-- `FEATURE_RBAC_ENABLED`
-- `FEATURE_BIGQUERY_ENABLED`
+- Dashboard components can be enabled/disabled
+- Pricing modules are configurable
+- Analytics features are toggleable
 
-### API Configuration
-- Rate limiting configuration
-- CORS settings
-- Request timeout settings
+### Performance Tuning
+- **Cache duration**: Configurable for different data types
+- **Pagination size**: Adjustable for optimal performance
+- **Refresh intervals**: Customizable for real-time data
+- **Memory optimization**: Configurable for different deployment sizes
 
-## 📚 Additional Documentation
+## 📚 API Documentation
 
-- [API Documentation](./api/README.md)
-- [Component Library](./components/README.md)
-- [Database Schema](./database/README.md)
-- [Deployment Guide](./deployment/README.md)
-- [Security Guidelines](./security/README.md)
+### Key Endpoints
+- `GET /api/customers` - Customer data with validation
+- `POST /api/pricing-service` - Smart pricing calculations
+- `GET /api/dashboard/metrics` - Real-time dashboard data
+- `POST /api/rfp-analysis` - RFP processing and analysis
+
+### Validation
+All API endpoints use Zod schemas for:
+- Request validation
+- Response validation
+- Type safety
+- Error handling
+
+## 🚀 Deployment & Production
+
+### Environment Setup
+1. **Database**: PostgreSQL with proper indexes
+2. **Caching**: Redis for session and application caching
+3. **Monitoring**: Sentry for error tracking
+4. **Security**: Environment variables for sensitive data
+
+### Performance Monitoring
+- **React DevTools**: Component performance
+- **Next.js Analytics**: Application metrics
+- **Database monitoring**: Query performance
+- **Error tracking**: Sentry integration
+
+## 💡 Future Enhancements
+
+### Planned Features
+- **Real-time updates**: WebSocket integration
+- **Advanced analytics**: Machine learning insights
+- **Mobile app**: React Native companion
+- **API expansion**: More third-party integrations
+
+### Performance Improvements
+- **Server-side rendering**: Enhanced SEO and performance
+- **Edge computing**: Cloudflare Workers integration
+- **Advanced caching**: Multi-layer caching strategy
+- **Database optimization**: Query optimization and indexing
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+### Development Setup
+1. Follow the installation instructions above
+2. Create a feature branch from main
+3. Implement changes with proper validation
+4. Add comprehensive tests
+5. Update documentation as needed
+6. Submit a pull request with detailed description
+
+### Code Standards
+- **TypeScript**: Strict type checking required
+- **Validation**: Zod schemas for all data
+- **Performance**: React.memo and optimization patterns
+- **Error handling**: Comprehensive error boundaries
+- **Documentation**: Clear comments and README updates
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## 📞 Support
 
-For technical support or questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation in the `/docs` folder 
+For support, email support@wasteops.com or join our Slack channel. 
