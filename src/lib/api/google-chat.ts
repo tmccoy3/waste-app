@@ -500,4 +500,90 @@ export const googleChatAPI = new GoogleChatAPI({
   serviceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ? JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY) : undefined,
 })
 
+// Export helper functions for API routes
+export async function sendGoogleChatMessage(message: string): Promise<void> {
+  if (!process.env.GOOGLE_CHAT_WEBHOOK_URL) {
+    throw new Error('Google Chat webhook URL not configured')
+  }
+
+  const chatAPI = new GoogleChatAPI({
+    webhookUrl: process.env.GOOGLE_CHAT_WEBHOOK_URL
+  })
+
+  await chatAPI.sendMessage(message)
+}
+
+export async function sendGoogleChatAlert(type: string, message: string, address?: string, customerName?: string): Promise<void> {
+  if (!process.env.GOOGLE_CHAT_WEBHOOK_URL) {
+    throw new Error('Google Chat webhook URL not configured')
+  }
+
+  const chatAPI = new GoogleChatAPI({
+    webhookUrl: process.env.GOOGLE_CHAT_WEBHOOK_URL
+  })
+
+  // Create a card based on the type
+  const card: ChatCard = {
+    header: {
+      title: getAlertTitle(type),
+      subtitle: customerName ? `${customerName}` : undefined,
+      imageUrl: "https://developers.google.com/chat/images/quickstart-app-avatar.png"
+    },
+    sections: [{
+      widgets: [
+        {
+          keyValue: {
+            topLabel: "Message",
+            content: message,
+            contentMultiline: true,
+            icon: "DESCRIPTION"
+          }
+        },
+        ...(address ? [{
+          keyValue: {
+            topLabel: "Address",
+            content: address,
+            contentMultiline: true,
+            icon: "MAP_PIN"
+          }
+        }] : []),
+        ...(customerName ? [{
+          keyValue: {
+            topLabel: "Customer",
+            content: customerName,
+            icon: "PERSON"
+          }
+        }] : []),
+        {
+          buttons: [{
+            textButton: {
+              text: "View Dashboard",
+              onClick: {
+                openLink: { url: "http://localhost:3000/dashboard" }
+              }
+            }
+          }]
+        }
+      ]
+    }]
+  }
+
+  await chatAPI.sendCard(card)
+}
+
+function getAlertTitle(type: string): string {
+  switch (type) {
+    case 'missed-pickup':
+      return '⚠️ Missed Pickup Alert'
+    case 'meeting':
+      return '📅 Meeting Scheduled'
+    case 'property-manager':
+      return '🏢 Property Manager Update'
+    case 'general':
+      return '📢 General Alert'
+    default:
+      return '🔔 Notification'
+  }
+}
+
 export type { ChatMessage, ChatCard, AlertConfig } 

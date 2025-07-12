@@ -146,7 +146,7 @@ export default function ChatMessageSender({ onClose }: ChatMessageSenderProps) {
       <div className="sender-header">
         <h3>📣 Company Alerts</h3>
         {onClose && (
-          <button onClick={onClose} className="close-button">
+          <button onClick={onClose} className="close-button" aria-label="Close chat message sender">
             ×
           </button>
         )}
@@ -218,6 +218,7 @@ export default function ChatMessageSender({ onClose }: ChatMessageSenderProps) {
           onClick={clearForm}
           className="clear-button"
           disabled={isLoading}
+          aria-label="Clear all form fields"
         >
           Clear
         </button>
@@ -225,6 +226,7 @@ export default function ChatMessageSender({ onClose }: ChatMessageSenderProps) {
           onClick={handleSendMessage}
           className="send-button"
           disabled={isLoading || !message.trim()}
+          aria-label={isLoading ? 'Sending message...' : 'Send message to Google Chat'}
         >
           {isLoading ? 'Sending...' : 'Send Message 📤'}
         </button>

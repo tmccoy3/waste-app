@@ -126,7 +126,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
           </div>
           
           {onRefresh && (
-            <button onClick={onRefresh} className="refresh-button">
+            <button onClick={onRefresh} className="refresh-button" aria-label="Refresh customer data">
               🔄 Refresh Data
             </button>
           )}
@@ -195,7 +195,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
         </div>
         
         <div className="customer-table-wrapper">
-          <table className="customer-table">
+          <table className="customer-table" role="table" aria-label="Customer portfolio data">
             <thead>
               <tr>
                 <th className="col-type">Type</th>
@@ -247,6 +247,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
                       <button 
                         className="action-button view-location"
                         title="View on Map"
+                        aria-label={`View ${customer.name} location on map`}
                         onClick={() => {
                           // Future: Open map centered on this customer
                           console.log('View location for:', customer.name)

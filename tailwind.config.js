@@ -6,15 +6,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Tableau-inspired color palette
-        'tableau-blue': '#1f77b4',
+        // Tableau-inspired color palette - Updated to match specifications
+        'tableau-blue': '#3b82f6',
         'tableau-orange': '#ff7f0e',
         'tableau-green': '#2ca02c',
         'tableau-red': '#d62728',
         'tableau-purple': '#9467bd',
         'tableau-brown': '#8c564b',
         'tableau-pink': '#e377c2',
-        'tableau-gray': '#7f7f7f',
+        'tableau-gray': '#f4f4f5',
         'tableau-olive': '#bcbd22',
         'tableau-cyan': '#17becf',
         // Shadcn/UI color variables
@@ -51,8 +51,8 @@ module.exports = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        // Modern dashboard colors
-        'dashboard-bg': '#f8fafc',
+        // Updated dashboard colors to match Tableau specifications
+        'dashboard-bg': '#f4f4f5',
         'dashboard-card': '#ffffff',
         'dashboard-border': '#e2e8f0',
         'dashboard-text': '#1e293b',
@@ -114,9 +114,10 @@ module.exports = {
         'sm': 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        'tableau': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        'tableau-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        'tableau-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        // Updated subtle shadows as requested
+        'tableau': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'tableau-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'tableau-xl': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-in-out',

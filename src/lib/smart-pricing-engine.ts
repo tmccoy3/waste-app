@@ -3,6 +3,89 @@
  * Uses unit type to determine base pricing with optional add-ons
  */
 
+// Simple cache implementation for memoization
+interface CacheEntry<T> {
+  value: T;
+  timestamp: number;
+}
+
+class SimpleCache<T> {
+  private cache = new Map<string, CacheEntry<T>>();
+  private maxAge = 5 * 60 * 1000; // 5 minutes cache expiry
+
+  get(key: string): T | undefined {
+    const entry = this.cache.get(key);
+    if (!entry) return undefined;
+
+    if (Date.now() - entry.timestamp > this.maxAge) {
+      this.cache.delete(key);
+      return undefined;
+    }
+
+    return entry.value;
+  }
+
+  set(key: string, value: T): void {
+    this.cache.set(key, { value, timestamp: Date.now() });
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+// Cache instances for different calculation types
+const unitBreakdownCache = new SimpleCache<Record<string, number>>();
+const unitPricingCache = new SimpleCache<UnitTypePricing>();
+const benchmarkValidationCache = new SimpleCache<PricingBreakdown['benchmarkValidation']>();
+const routeMetricsCache = new SimpleCache<{ driveTimeMinutes: number; distanceMiles: number }>();
+const disposalFeesCache = new SimpleCache<number>();
+const confidenceCache = new SimpleCache<'high' | 'medium' | 'low'>();
+
+// Utility function to ensure numbers are parsed correctly
+function parseNumber(value: any, defaultValue: number = 0): number {
+  if (typeof value === 'number' && !isNaN(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value.replace(/[^\d.-]/g, ''));
+    return isNaN(parsed) ? defaultValue : parsed;
+  }
+  return defaultValue;
+}
+
+// Utility function to safely parse customer data
+function parseCustomerData(customerData: any[]): Array<{ address: string; monthlyRevenue: number; location?: string }> {
+  if (!Array.isArray(customerData)) return [];
+  
+  return customerData.map(customer => ({
+    address: customer?.address || customer?.location || '',
+    monthlyRevenue: parseNumber(customer?.monthlyRevenue || customer?.revenue),
+    location: customer?.location || customer?.address || ''
+  }));
+}
+
+// Utility function to create cache keys
+function createCacheKey(prefix: string, ...args: any[]): string {
+  return `${prefix}_${JSON.stringify(args)}`;
+}
+
+// Memoized function to parse special requirements once
+function parseSpecialRequirements(specialRequirements: string[]): {
+  combined: string;
+  hasWalkout: boolean;
+  hasGated: boolean;
+  hasRearAlley: boolean;
+  hasZeroTolerance: boolean;
+} {
+  const combined = specialRequirements.join(' ').toLowerCase();
+  return {
+    combined,
+    hasWalkout: combined.includes('walk-out') || combined.includes('walkout') || combined.includes('backdoor') || combined.includes('walk'),
+    hasGated: combined.includes('gate'),
+    hasRearAlley: combined.includes('rear alley') || combined.includes('alley access'),
+    hasZeroTolerance: combined.includes('zero tolerance') || combined.includes('oversight')
+  };
+}
+
 export type UnitType = 'Single Family Homes' | 'Townhomes' | 'Condos' | 'Mixed Residential' | 'Unknown';
 
 export interface ServiceProfile {
@@ -142,7 +225,7 @@ export function generateUnitBasedPricing(
   const riskFlags: string[] = [];
   const warnings: string[] = [];
 
-  // Handle mixed residential or determine unit breakdown
+  // Handle mixed residential or determine unit breakdown (memoized)
   const unitBreakdown = determineUnitBreakdown(profile);
 
   // Calculate pricing for each unit type
@@ -167,18 +250,17 @@ export function generateUnitBasedPricing(
   const totalCost = totalUnits * config.placeholderCostPerUnit;
   const marginPercent = totalMonthlyRevenue > 0 ? (totalMonthlyRevenue - totalCost) / totalMonthlyRevenue : 0;
 
-  // Benchmark validation
+  // Benchmark validation (memoized)
   const benchmarkValidation = validateAgainstBenchmarks(unitTypePricing, profile);
 
-  // Determine confidence
+  // Determine confidence (memoized)
   const confidence = determineConfidence(profile, benchmarkValidation, riskFlags);
 
+  // Parse special requirements once for warnings
+  const specialReqs = parseSpecialRequirements(profile.specialRequirements);
+
   // Add warnings for high-risk scenarios
-  if (profile.isWalkout && !profile.specialRequirements.some(req => 
-    req.toLowerCase().includes('walk-out') || 
-    req.toLowerCase().includes('walkout') || 
-    req.toLowerCase().includes('backdoor')
-  )) {
+  if (profile.isWalkout && !specialReqs.hasWalkout) {
     warnings.push('Walk-out service detected but not explicitly mentioned in requirements');
   }
 
@@ -204,9 +286,13 @@ export function generateUnitBasedPricing(
 }
 
 /**
- * Determine unit breakdown from profile
+ * Determine unit breakdown from profile (memoized)
  */
 function determineUnitBreakdown(profile: ServiceProfile): Record<string, number> {
+  const cacheKey = createCacheKey('unitBreakdown', profile.unitType, profile.homes, profile.unitBreakdown);
+  const cached = unitBreakdownCache.get(cacheKey);
+  if (cached) return cached;
+
   const breakdown: Record<string, number> = {
     'Single Family Homes': 0,
     'Townhomes': 0,
@@ -214,26 +300,27 @@ function determineUnitBreakdown(profile: ServiceProfile): Record<string, number>
   };
 
   if (profile.unitBreakdown) {
-    breakdown['Single Family Homes'] = profile.unitBreakdown.singleFamily || 0;
-    breakdown['Townhomes'] = profile.unitBreakdown.townhomes || 0;
-    breakdown['Condos'] = profile.unitBreakdown.condos || 0;
+    breakdown['Single Family Homes'] = parseNumber(profile.unitBreakdown.singleFamily, 0);
+    breakdown['Townhomes'] = parseNumber(profile.unitBreakdown.townhomes, 0);
+    breakdown['Condos'] = parseNumber(profile.unitBreakdown.condos, 0);
   } else {
     // Default to profile unit type
     const unitType = profile.unitType === 'Unknown' ? 'Single Family Homes' : profile.unitType;
     if (unitType === 'Mixed Residential') {
       // For mixed residential, assume 70% SFH, 30% townhomes
-      breakdown['Single Family Homes'] = Math.floor(profile.homes * 0.7);
-      breakdown['Townhomes'] = profile.homes - breakdown['Single Family Homes'];
+      breakdown['Single Family Homes'] = Math.floor(parseNumber(profile.homes) * 0.7);
+      breakdown['Townhomes'] = parseNumber(profile.homes) - breakdown['Single Family Homes'];
     } else {
-      breakdown[unitType] = profile.homes;
+      breakdown[unitType] = parseNumber(profile.homes);
     }
   }
 
+  unitBreakdownCache.set(cacheKey, breakdown);
   return breakdown;
 }
 
 /**
- * Calculate pricing for a specific unit type
+ * Calculate pricing for a specific unit type (memoized)
  */
 function calculateUnitTypePricing(
   unitType: UnitType,
@@ -241,8 +328,13 @@ function calculateUnitTypePricing(
   profile: ServiceProfile,
   config: PricingEngineConfig
 ): UnitTypePricing {
+  const cacheKey = createCacheKey('unitPricing', unitType, unitCount, profile.isWalkout, profile.isGated, profile.hasSpecialContainers, profile.specialRequirements);
+  const cached = unitPricingCache.get(cacheKey);
+  if (cached) return cached;
+
   let basePrice = 0;
   const riskFlags: string[] = [];
+  const parsedUnitCount = parseNumber(unitCount);
 
   // Determine base price by unit type
   switch (unitType) {
@@ -254,11 +346,11 @@ function calculateUnitTypePricing(
       break;
     case 'Condos':
       // For condos, calculate based on containers needed
-      const containersNeeded = Math.ceil(unitCount / UNIT_PRICING.condoContainersPerUnit);
+      const containersNeeded = Math.ceil(parsedUnitCount / UNIT_PRICING.condoContainersPerUnit);
       const trashCost = containersNeeded * UNIT_PRICING.condo.trash;
       const recyclingCost = containersNeeded * UNIT_PRICING.condo.recycling;
-      basePrice = (trashCost + recyclingCost) / unitCount; // Per unit price
-      riskFlags.push(`Condo pricing: ${containersNeeded} containers for ${unitCount} units`);
+      basePrice = (trashCost + recyclingCost) / parsedUnitCount; // Per unit price
+      riskFlags.push(`Condo pricing: ${containersNeeded} containers for ${parsedUnitCount} units`);
       break;
     default:
       basePrice = UNIT_PRICING.singleFamilyHome; // Default to SFH
@@ -288,21 +380,23 @@ function calculateUnitTypePricing(
     riskFlags.push('Special container requirements detected');
   }
 
+  // Parse special requirements once for efficiency
+  const specialReqs = parseSpecialRequirements(profile.specialRequirements);
+
   // Check for rear alley access or special oversight (risk flag only)
-  const specialReqs = profile.specialRequirements.join(' ').toLowerCase();
-  if (specialReqs.includes('rear alley') || specialReqs.includes('alley access')) {
+  if (specialReqs.hasRearAlley) {
     riskFlags.push('⚠️ Rear alley access required - operational complexity');
   }
-  if (specialReqs.includes('zero tolerance') || specialReqs.includes('oversight')) {
+  if (specialReqs.hasZeroTolerance) {
     riskFlags.push('⚠️ High service expectations - strict oversight required');
   }
 
   const finalPricePerUnit = basePrice + walkoutPremium + gatedPremium + specialContainerPremium;
-  const monthlyRevenue = finalPricePerUnit * unitCount;
+  const monthlyRevenue = finalPricePerUnit * parsedUnitCount;
 
-  return {
+  const result: UnitTypePricing = {
     unitType,
-    unitCount,
+    unitCount: parsedUnitCount,
     basePrice,
     walkoutPremium,
     gatedPremium,
@@ -311,15 +405,22 @@ function calculateUnitTypePricing(
     monthlyRevenue,
     riskFlags
   };
+
+  unitPricingCache.set(cacheKey, result);
+  return result;
 }
 
 /**
- * Validate pricing against benchmarks
+ * Validate pricing against benchmarks (memoized)
  */
 function validateAgainstBenchmarks(
   unitTypePricing: UnitTypePricing[],
   profile: ServiceProfile
 ): PricingBreakdown['benchmarkValidation'] {
+  const cacheKey = createCacheKey('benchmarkValidation', unitTypePricing.map(u => ({ type: u.unitType, count: u.unitCount, price: u.finalPricePerUnit })));
+  const cached = benchmarkValidationCache.get(cacheKey);
+  if (cached) return cached;
+
   let totalVariance = 0;
   let totalWeight = 0;
   let isWithinBenchmark = true;
@@ -373,22 +474,29 @@ function validateAgainstBenchmarks(
     validationMessage += ` - ${messages.join(', ')}`;
   }
 
-  return {
+  const result = {
     isWithinBenchmark,
     benchmarkPrice: primaryBenchmark,
     variancePercent: averageVariance,
     validationMessage
   };
+
+  benchmarkValidationCache.set(cacheKey, result);
+  return result;
 }
 
 /**
- * Determine confidence level
+ * Determine confidence level (memoized)
  */
 function determineConfidence(
   profile: ServiceProfile,
   benchmarkValidation: PricingBreakdown['benchmarkValidation'],
   riskFlags: string[]
 ): 'high' | 'medium' | 'low' {
+  const cacheKey = createCacheKey('confidence', profile.unitType, profile.isWalkout, profile.isGated, profile.hasSpecialContainers, profile.specialRequirements, benchmarkValidation.variancePercent, riskFlags.length);
+  const cached = confidenceCache.get(cacheKey);
+  if (cached) return cached;
+
   let confidenceScore = 100;
 
   // Reduce confidence for unknown unit types
@@ -407,18 +515,22 @@ function determineConfidence(
 
   // Reduce confidence if add-ons applied without clear requirements
   if (profile.isWalkout || profile.isGated || profile.hasSpecialContainers) {
-    const explicitMentions = profile.specialRequirements.join(' ').toLowerCase();
-    if (profile.isWalkout && !explicitMentions.includes('walk') && !explicitMentions.includes('backdoor')) {
+    const specialReqs = parseSpecialRequirements(profile.specialRequirements);
+    if (profile.isWalkout && !specialReqs.hasWalkout) {
       confidenceScore -= 15;
     }
-    if (profile.isGated && !explicitMentions.includes('gate')) {
+    if (profile.isGated && !specialReqs.hasGated) {
       confidenceScore -= 10;
     }
   }
 
-  if (confidenceScore >= 80) return 'high';
-  if (confidenceScore >= 60) return 'medium';
-  return 'low';
+  let result: 'high' | 'medium' | 'low';
+  if (confidenceScore >= 80) result = 'high';
+  else if (confidenceScore >= 60) result = 'medium';
+  else result = 'low';
+
+  confidenceCache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -429,11 +541,11 @@ export function calculateOperationalCosts(
   timeeroData?: any,
   customerData?: any[]
 ): OperationalCosts {
-  // Step 1: Estimate drive time and distance
+  // Step 1: Estimate drive time and distance (memoized)
   const { driveTimeMinutes, distanceMiles } = estimateRouteMetrics(profile.location, customerData);
   
   // Step 2: Calculate service time
-  const serviceTimeMinutes = profile.homes * COST_PARAMETERS.service_time_per_home;
+  const serviceTimeMinutes = parseNumber(profile.homes) * COST_PARAMETERS.service_time_per_home;
   
   // Step 3: Determine pickup frequency
   let pickupsPerMonth = 4.33; // Weekly base
@@ -452,11 +564,11 @@ export function calculateOperationalCosts(
   const monthlyLaborCost = laborCostPerTrip * pickupsPerMonth;
   const monthlyFuelCost = fuelCostPerTrip * pickupsPerMonth;
   
-  // Step 5: Calculate disposal fees
+  // Step 5: Calculate disposal fees (memoized)
   const dumpFeesPerMonth = calculateDisposalFees(profile);
   
   const totalMonthlyCost = monthlyLaborCost + monthlyFuelCost + dumpFeesPerMonth + COST_PARAMETERS.equipment_lease_monthly;
-  const costPerHome = totalMonthlyCost / profile.homes;
+  const costPerHome = totalMonthlyCost / parseNumber(profile.homes);
   
   return {
     driveTimeMinutes,
@@ -471,31 +583,42 @@ export function calculateOperationalCosts(
 }
 
 /**
- * Calculate disposal fees based on waste generation
+ * Calculate disposal fees based on waste generation (memoized)
  */
 function calculateDisposalFees(profile: ServiceProfile): number {
-  const trashTons = profile.homes * COST_PARAMETERS.waste_generation.trash_tons_per_home_monthly;
+  const cacheKey = createCacheKey('disposalFees', profile.homes, profile.recyclingRequired, profile.yardWasteRequired);
+  const cached = disposalFeesCache.get(cacheKey);
+  if (cached) return cached;
+
+  const homes = parseNumber(profile.homes);
+  const trashTons = homes * COST_PARAMETERS.waste_generation.trash_tons_per_home_monthly;
   const trashCost = trashTons * COST_PARAMETERS.disposal_rates.trash_per_ton;
   
   let recyclingRevenue = 0;
   if (profile.recyclingRequired) {
-    const recyclingTons = profile.homes * COST_PARAMETERS.waste_generation.recycling_tons_per_home_monthly;
+    const recyclingTons = homes * COST_PARAMETERS.waste_generation.recycling_tons_per_home_monthly;
     recyclingRevenue = recyclingTons * COST_PARAMETERS.disposal_rates.recycling_revenue_per_ton; // Negative = revenue
   }
   
   let yardWasteCost = 0;
   if (profile.yardWasteRequired) {
-    const yardWasteTons = profile.homes * COST_PARAMETERS.waste_generation.yard_waste_tons_per_home_monthly;
+    const yardWasteTons = homes * COST_PARAMETERS.waste_generation.yard_waste_tons_per_home_monthly;
     yardWasteCost = yardWasteTons * COST_PARAMETERS.disposal_rates.yard_waste_per_ton;
   }
   
-  return trashCost + recyclingRevenue + yardWasteCost;
+  const result = trashCost + recyclingRevenue + yardWasteCost;
+  disposalFeesCache.set(cacheKey, result);
+  return result;
 }
 
 /**
- * Estimate route metrics using customer data and location heuristics
+ * Estimate route metrics using customer data and location heuristics (memoized)
  */
 function estimateRouteMetrics(location: string, customerData?: any[]): { driveTimeMinutes: number; distanceMiles: number } {
+  const cacheKey = createCacheKey('routeMetrics', location, customerData?.length || 0);
+  const cached = routeMetricsCache.get(cacheKey);
+  if (cached) return cached;
+
   // Default estimates
   let driveTimeMinutes = 25;
   let distanceMiles = 15;
@@ -503,8 +626,10 @@ function estimateRouteMetrics(location: string, customerData?: any[]): { driveTi
   // Use customer data to find nearby routes
   if (customerData && customerData.length > 0) {
     const locationLower = location.toLowerCase();
-    const nearbyCustomers = customerData.filter(customer => {
-      const customerLocation = customer.address?.toLowerCase() || '';
+    const parsedCustomerData = parseCustomerData(customerData);
+    
+    const nearbyCustomers = parsedCustomerData.filter(customer => {
+      const customerLocation = customer.address.toLowerCase();
       return (
         (locationLower.includes('fairfax') && customerLocation.includes('fairfax')) ||
         (locationLower.includes('vienna') && customerLocation.includes('vienna')) ||
@@ -520,7 +645,9 @@ function estimateRouteMetrics(location: string, customerData?: any[]): { driveTi
     }
   }
   
-  return { driveTimeMinutes, distanceMiles };
+  const result = { driveTimeMinutes, distanceMiles };
+  routeMetricsCache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -543,7 +670,8 @@ export function runSmartPricingEngine(
   console.log(`📊 Suggested price: $${pricing.averagePricePerUnit.toFixed(2)}/home (${pricing.marginPercent.toFixed(1)}% margin)`);
   
   // Step 3: Validate pricing against double-counting
-  if (pricing.addOnsApplied.walkout && !profile.specialRequirements.some(req => req.toLowerCase().includes('walk'))) {
+  const specialReqs = parseSpecialRequirements(profile.specialRequirements);
+  if (pricing.addOnsApplied.walkout && !specialReqs.hasWalkout) {
     console.warn('⚠️ Warning: Walk-out service applied but not clearly specified in requirements');
   }
   
@@ -647,163 +775,95 @@ export function generateStrategicSummary(
 
   // Determine pricing constraints
   const pricingConstraints: string[] = [];
-  if (!serviceProfile.specialRequirements.some(req => req.toLowerCase().includes('fuel'))) {
-    pricingConstraints.push('noFuelSurcharge');
+  if (pricing.benchmarkValidation.variancePercent > 10) {
+    pricingConstraints.push('exceeds market benchmarks');
   }
-  if (pricing.benchmarkValidation.isWithinBenchmark) {
-    pricingConstraints.push('fixedRate');
+  if (serviceProfile.isWalkout) {
+    pricingConstraints.push('walk-out service premium required');
   }
-  if (!pricing.addOnsApplied.walkout && !pricing.addOnsApplied.gated && !pricing.addOnsApplied.specialContainers) {
-    pricingConstraints.push('noAddOns');
+  if (serviceProfile.isGated) {
+    pricingConstraints.push('gated access coordination costs');
   }
 
-  let summary = `### 📊 Strategic Analysis Summary: ${recommendationLevel}
-
-#### 🎯 Executive Overview
-- **Community**: ${communityName}
-- **Unit Count**: ${unitCount.toLocaleString()} ${unitType}s
-- **Pricing Strategy**: $${basePrice.toFixed(2)}/unit/month
-- **Total Monthly Revenue**: $${totalRevenue.toLocaleString()}
-- **Total Monthly Cost**: $${totalCost.toLocaleString()}
-- **Net Monthly Profit**: ${netProfit >= 0 ? '$' + netProfit.toLocaleString() : '-$' + Math.abs(netProfit).toLocaleString()}
-- **Profit Margin**: ${finalMargin.toFixed(1)}% (${profitabilityAssessment})
-
----
-
-### ${finalMargin > 15 ? '✅' : finalMargin > 0 ? '⚠️' : '❌'} Profitability Analysis
-
-#### ${finalMargin > 20 ? '🎯 Strong Financial Performance' : finalMargin > 10 ? '💡 Moderate Financial Performance' : '🚨 Challenging Financial Performance'}
-
-${finalMargin > 20 ? 
-  `> 🟢 **Excellent Opportunity**: This proposal delivers a healthy ${finalMargin.toFixed(1)}% margin, exceeding our 15% target by ${(finalMargin - 15).toFixed(1)} percentage points.
-
-**Value Drivers:**
-- Strong revenue generation of $${totalRevenue.toLocaleString()}/month
-- Efficient cost structure at $${(totalCost / unitCount).toFixed(2)}/unit
-- ${finalMargin > 25 ? 'Premium pricing successfully achieved' : 'Competitive pricing with good margins'}
-- ${proximityScore === 'close' ? 'Excellent route efficiency' : 'Acceptable operational logistics'}` :
-
-finalMargin > 10 ? 
-  `> 🟡 **Moderate Opportunity**: This proposal generates a ${finalMargin.toFixed(1)}% margin, ${finalMargin > 15 ? 'meeting' : 'below'} our 15% target by ${Math.abs(finalMargin - 15).toFixed(1)} percentage points.
-
-**Performance Factors:**
-- Monthly revenue of $${totalRevenue.toLocaleString()} provides ${finalMargin > 15 ? 'adequate' : 'limited'} profit buffer
-- Cost efficiency at $${(totalCost / unitCount).toFixed(2)}/unit is ${totalCost / totalRevenue < 0.8 ? 'competitive' : 'concerning'}
-- ${finalMargin > 15 ? 'Pricing strategy is effective' : 'Pricing constraints limit profitability'}
-- ${proximityScore === 'close' ? 'Good route synergy' : proximityScore === 'moderate' ? 'Moderate routing impact' : 'High routing burden'}` :
-
-  `> 🔴 **High-Risk Opportunity**: This proposal operates at ${finalMargin < 0 ? 'a loss' : 'minimal profitability'} with ${finalMargin.toFixed(1)}% margin, falling ${(15 - finalMargin).toFixed(1)} percentage points below our 15% target.
-
-**Risk Factors:**
-- ${finalMargin < 0 ? `Monthly loss of $${Math.abs(netProfit).toLocaleString()}` : `Minimal monthly profit of $${netProfit.toLocaleString()}`}
-- High cost burden at $${(totalCost / unitCount).toFixed(2)}/unit (${((totalCost / totalRevenue) * 100).toFixed(1)}% of revenue)
-- ${pricingConstraints.length > 0 ? 'Pricing constraints prevent necessary adjustments' : 'Limited pricing flexibility'}
-- ${proximityScore === 'far' ? 'Significant routing inefficiencies' : 'Operational challenges'}`
-}
-
-#### 💰 Detailed Cost Analysis
-| Cost Category | Monthly Amount | Per Unit | % of Revenue | Assessment |
-|---------------|----------------|----------|--------------|------------|
-| **Labor Costs** | $${laborCosts.toLocaleString()} | $${(laborCosts / unitCount).toFixed(2)} | ${(laborCosts / totalRevenue * 100).toFixed(1)}% | ${laborCosts / totalRevenue < 0.4 ? '✅ Efficient' : laborCosts / totalRevenue < 0.5 ? '⚠️ Moderate' : '❌ High'} |
-| **Fuel & Transport** | $${fuelCosts.toLocaleString()} | $${(fuelCosts / unitCount).toFixed(2)} | ${(fuelCosts / totalRevenue * 100).toFixed(1)}% | ${proximityScore === 'close' ? '✅ Efficient' : proximityScore === 'moderate' ? '⚠️ Moderate' : '❌ High'} |
-| **Equipment & Maintenance** | $${maintenanceCosts.toLocaleString()} | $${(maintenanceCosts / unitCount).toFixed(2)} | ${(maintenanceCosts / totalRevenue * 100).toFixed(1)}% | ${maintenanceCosts / totalRevenue < 0.1 ? '✅ Efficient' : '⚠️ Standard'} |
-| **Disposal Fees** | $${disposalFees.toLocaleString()} | $${(disposalFees / unitCount).toFixed(2)} | ${(disposalFees / totalRevenue * 100).toFixed(1)}% | ${disposalFees / totalRevenue < 0.2 ? '✅ Competitive' : disposalFees / totalRevenue < 0.3 ? '⚠️ Elevated' : '❌ High'} |
-| **Total Operating Cost** | **$${totalCost.toLocaleString()}** | **$${(totalCost / unitCount).toFixed(2)}** | **${(totalCost / totalRevenue * 100).toFixed(1)}%** | **${totalCost / totalRevenue < 0.75 ? '✅ Efficient' : totalCost / totalRevenue < 0.85 ? '⚠️ Acceptable' : '❌ Concerning'}** |
-
-#### 📈 Market Position & Benchmarking
-| Metric | Our Position | Market Benchmark | Variance | Assessment |
-|--------|-------------|------------------|----------|------------|
-| **Unit Pricing** | $${basePrice.toFixed(2)} | $${benchmarkPrice.toFixed(2)} | ${((basePrice / benchmarkPrice - 1) * 100).toFixed(1)}% | ${pricing.benchmarkValidation.isWithinBenchmark ? '✅ Competitive' : basePrice > benchmarkPrice * 1.1 ? '⚠️ Premium' : '❌ Below Market'} |
-| **Profit Margin** | ${finalMargin.toFixed(1)}% | 15.0% (Target) | ${(finalMargin - 15).toFixed(1)}% | ${finalMargin > 20 ? '✅ Excellent' : finalMargin > 15 ? '✅ On Target' : finalMargin > 10 ? '⚠️ Below Target' : '❌ Poor'} |
-| **Cost Efficiency** | $${(totalCost / unitCount).toFixed(2)}/unit | $${(benchmarkPrice * 0.8).toFixed(2)}/unit | ${(((totalCost / unitCount) / (benchmarkPrice * 0.8) - 1) * 100).toFixed(1)}% | ${(totalCost / unitCount) < (benchmarkPrice * 0.8) ? '✅ Efficient' : (totalCost / unitCount) < (benchmarkPrice * 0.9) ? '⚠️ Competitive' : '❌ High'} |
-
-#### 🎯 Strategic Fit Assessment
-
-**Route Integration:** ${proximityScore === 'close' ? '✅ Excellent' : proximityScore === 'moderate' ? '⚠️ Moderate' : '❌ Poor'}
-- Drive time: ${operationalCosts.driveTimeMinutes} minutes (${proximityScore} proximity)
-- ${proximityScore === 'close' ? 'Synergizes well with existing routes' : proximityScore === 'moderate' ? 'Manageable addition to route network' : 'Requires dedicated routing resources'}
-
-**Service Complexity:** ${serviceProfile.specialRequirements.length < 3 ? '✅ Standard' : serviceProfile.specialRequirements.length < 5 ? '⚠️ Moderate' : '❌ Complex'}
-- ${pricing.addOnsApplied.walkout ? '• Walk-out service required' : ''}
-- ${pricing.addOnsApplied.gated ? '• Gated community access' : ''}
-- ${pricing.addOnsApplied.specialContainers ? '• Special container requirements' : ''}
-- ${serviceProfile.recyclingRequired ? '• Recycling service included' : ''}
-- ${serviceProfile.yardWasteRequired ? '• Yard waste service included' : ''}
-
-**Contract Constraints:** ${pricingConstraints.length === 0 ? '✅ Flexible' : pricingConstraints.length < 3 ? '⚠️ Some Limitations' : '❌ Restrictive'}
-${pricingConstraints.includes('noFuelSurcharge') ? '- No fuel surcharge provisions\n' : ''}
-${pricingConstraints.includes('fixedRate') ? '- Fixed unit pricing required\n' : ''}
-${pricingConstraints.includes('noAddOns') ? '- Limited premium service fees\n' : ''}
-
----
-
-### 🎯 Strategic Recommendation
-
-#### ${finalMargin > 20 ? '🟢 STRONGLY RECOMMEND PURSUIT' : finalMargin > 15 ? '🟡 RECOMMEND WITH CONDITIONS' : finalMargin > 0 ? '🟠 PURSUE WITH CAUTION' : '🔴 DO NOT PURSUE'}
-
-${finalMargin > 20 ? 
-  `**Executive Summary:** This is an excellent opportunity that aligns with our growth strategy and profitability targets.
-
-**Key Strengths:**
-- Exceeds profit margin requirements by ${(finalMargin - 15).toFixed(1)} percentage points
-- ${proximityScore === 'close' ? 'Excellent operational synergy with existing routes' : 'Acceptable operational integration'}
-- Strong revenue potential of $${(totalRevenue * 12 / 1000).toFixed(0)}K annually
-- ${pricing.benchmarkValidation.isWithinBenchmark ? 'Competitive market positioning' : 'Premium pricing successfully justified'}
-
-**Implementation Priority:** High - Recommend immediate bid preparation and aggressive pursuit.` :
-
-finalMargin > 15 ? 
-  `**Executive Summary:** This opportunity meets our minimum profitability requirements and offers solid strategic value.
-
-**Key Considerations:**
-- Meets 15% margin threshold with ${(finalMargin - 15).toFixed(1)}% buffer
-- ${proximityScore !== 'far' ? 'Acceptable operational integration' : 'Routing challenges require attention'}
-- Annual revenue potential of $${(totalRevenue * 12 / 1000).toFixed(0)}K supports growth objectives
-- ${pricingConstraints.length > 0 ? 'Some pricing limitations require careful bid structuring' : 'Flexible pricing structure allows optimization'}
-
-**Implementation Priority:** Medium - Recommend structured bid with clear terms and conditions.` :
-
-finalMargin > 0 ? 
-  `**Executive Summary:** This opportunity presents significant challenges but may offer strategic value under specific conditions.
-
-**Critical Concerns:**
-- Below-target margin of ${finalMargin.toFixed(1)}% creates financial risk
-- ${totalCost / totalRevenue > 0.9 ? 'High cost structure limits flexibility' : 'Moderate cost efficiency'}
-- ${proximityScore === 'far' ? 'Routing inefficiencies compound profitability challenges' : 'Operational complexities increase risk'}
-- Annual revenue of $${(totalRevenue * 12 / 1000).toFixed(0)}K may not justify resource allocation
-
-**Implementation Priority:** Low - Only pursue if strategic benefits outweigh financial limitations.` :
-
-  `**Executive Summary:** This opportunity does not meet our financial criteria and poses significant business risk.
-
-**Critical Issues:**
-- Operating at ${finalMargin.toFixed(1)}% margin results in ${finalMargin < 0 ? 'monthly losses' : 'minimal profitability'}
-- High cost structure at ${(totalCost / totalRevenue * 100).toFixed(1)}% of revenue
-- ${proximityScore === 'far' ? 'Poor route integration compounds losses' : 'Operational inefficiencies'}
-- ${pricingConstraints.length > 0 ? 'Pricing constraints prevent corrective adjustments' : 'Limited ability to improve economics'}
-
-**Implementation Priority:** None - Recommend declining this opportunity.`
-}
-
-${finalMargin <= 15 ? 
-  `\n#### 🔧 Potential Improvement Strategies
-${finalMargin > 10 ? 
-    `- **Pricing Optimization:** Negotiate ${((15 / finalMargin * 100) - 100).toFixed(1)}% price increase to reach target margin
-- **Cost Reduction:** Focus on ${laborCosts > fuelCosts ? 'labor efficiency' : 'routing optimization'} initiatives
-- **Service Bundling:** Explore premium service add-ons to improve unit economics
-- **Contract Terms:** Negotiate fuel surcharge provisions and flexible pricing clauses` :
-    `- **Fundamental Restructuring:** Requires ${((totalCost / (totalRevenue * 0.85)) * 100 - 100).toFixed(1)}% cost reduction or significant pricing increase
-- **Alternative Service Model:** Consider modified service approach to improve economics
-- **Strategic Partnership:** Explore subcontracting or joint venture opportunities
-- **Market Timing:** Consider declining and revisiting when market conditions improve`
-  }` : ''
-}
-
----
-
-**Analysis Generated:** ${new Date().toLocaleDateString()} | **Confidence Level:** ${pricing.confidence.charAt(0).toUpperCase() + pricing.confidence.slice(1)} | **Margin Target:** 15%+
-
-`;
-
+  // Build comprehensive summary
+  let summary = `**${communityName}** - ${parseNumber(unitCount)} ${unitType}\n\n`;
+  
+  summary += `**📊 FINANCIAL ANALYSIS**\n`;
+  summary += `• **Monthly Revenue**: $${totalRevenue.toFixed(2)}\n`;
+  summary += `• **Monthly Costs**: $${totalCost.toFixed(2)}\n`;
+  summary += `• **Net Profit**: $${netProfit.toFixed(2)}\n`;
+  summary += `• **Profit Margin**: ${finalMargin.toFixed(1)}%\n`;
+  summary += `• **Price per Unit**: $${basePrice.toFixed(2)}\n`;
+  summary += `• **Profitability**: ${profitabilityAssessment}\n\n`;
+  
+  summary += `**🎯 STRATEGIC RECOMMENDATION: ${recommendationLevel}**\n\n`;
+  
+  summary += `**🔍 OPERATIONAL ANALYSIS**\n`;
+  summary += `• **Location**: ${proximityScore === 'close' ? 'Excellent' : proximityScore === 'moderate' ? 'Good' : 'Challenging'} proximity to existing routes\n`;
+  summary += `• **Drive Time**: ${operationalCosts.driveTimeMinutes} minutes\n`;
+  summary += `• **Service Complexity**: ${serviceProfile.isWalkout ? 'High (walk-out service)' : 'Standard'}\n`;
+  summary += `• **Access Requirements**: ${serviceProfile.isGated ? 'Gated community coordination' : 'Standard access'}\n\n`;
+  
+  summary += `**💡 PRICING STRATEGY**\n`;
+  summary += `• **Base Price**: $${pricing.unitTypePricing[0]?.basePrice.toFixed(2)} (${pricing.benchmarkValidation.isWithinBenchmark ? 'competitive' : 'premium'} vs $${benchmarkPrice.toFixed(2)} benchmark)\n`;
+  if (pricing.addOnsApplied.walkout) {
+    summary += `• **Walk-out Premium**: +$${pricing.unitTypePricing[0]?.walkoutPremium.toFixed(2)} (+33%)\n`;
+  }
+  if (pricing.addOnsApplied.gated) {
+    summary += `• **Gated Access**: +$${pricing.unitTypePricing[0]?.gatedPremium.toFixed(2)}\n`;
+  }
+  if (pricing.addOnsApplied.specialContainers) {
+    summary += `• **Special Containers**: +$${pricing.unitTypePricing[0]?.specialContainerPremium.toFixed(2)}\n`;
+  }
+  summary += `• **Final Price**: $${pricing.averagePricePerUnit.toFixed(2)}/unit\n\n`;
+  
+  if (pricing.riskFlags.length > 0) {
+    summary += `**⚠️ RISK FACTORS**\n`;
+    pricing.riskFlags.forEach(flag => {
+      summary += `• ${flag}\n`;
+    });
+    summary += `\n`;
+  }
+  
+  if (pricing.warnings.length > 0) {
+    summary += `**🚨 WARNINGS**\n`;
+    pricing.warnings.forEach(warning => {
+      summary += `• ${warning}\n`;
+    });
+    summary += `\n`;
+  }
+  
+  // Add strategic recommendations based on profitability
+  summary += `**🎯 STRATEGIC INSIGHTS**\n`;
+  if (finalMargin > 25) {
+    summary += `• **Excellent Opportunity**: High profitability with strong competitive position\n`;
+    summary += `• **Recommendation**: Pursue aggressively with competitive pricing\n`;
+    summary += `• **Next Steps**: Prepare comprehensive proposal highlighting service excellence\n`;
+  } else if (finalMargin > 15) {
+    summary += `• **Good Opportunity**: Solid profitability with manageable risk\n`;
+    summary += `• **Recommendation**: Proceed with detailed cost analysis and service plan\n`;
+    summary += `• **Next Steps**: Validate service requirements and finalize pricing strategy\n`;
+  } else if (finalMargin > 0) {
+    summary += `• **Challenging Opportunity**: Low margins require careful management\n`;
+    summary += `• **Recommendation**: Consider value-added services or pricing adjustments\n`;
+    summary += `• **Next Steps**: Explore cost optimization and service efficiency improvements\n`;
+  } else {
+    summary += `• **High Risk**: Current pricing structure results in losses\n`;
+    summary += `• **Recommendation**: Significant pricing adjustment required or decline opportunity\n`;
+    summary += `• **Next Steps**: Reassess cost structure and competitive positioning\n`;
+  }
+  
   return summary;
+}
+
+/**
+ * Clear all caches (useful for testing or when data changes significantly)
+ */
+export function clearPricingCaches(): void {
+  unitBreakdownCache.clear();
+  unitPricingCache.clear();
+  benchmarkValidationCache.clear();
+  routeMetricsCache.clear();
+  disposalFeesCache.clear();
+  confidenceCache.clear();
 } 

@@ -219,17 +219,19 @@ export default function CustomerMap({ googleMapsApiKey, customers, onRefresh, la
           <button 
             onClick={() => setShowClustering(!showClustering)}
             className="toggle-btn"
+            aria-label={`${showClustering ? 'Turn off' : 'Turn on'} map clustering`}
           >
             {showClustering ? '🔗 Clustering ON' : '📍 Clustering OFF'}
           </button>
           <button 
             onClick={() => setShowFacilities(!showFacilities)}
             className="toggle-btn"
+            aria-label={`${showFacilities ? 'Hide' : 'Show'} facilities on map`}
           >
             {showFacilities ? '🏭 Facilities ON' : '🏭 Facilities OFF'}
           </button>
           {onRefresh && (
-            <button onClick={onRefresh} className="refresh-btn">
+            <button onClick={onRefresh} className="refresh-btn" aria-label="Refresh map data">
               🔄 Refresh Data
             </button>
           )}
