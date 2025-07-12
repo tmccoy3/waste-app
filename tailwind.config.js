@@ -3,6 +3,14 @@ module.exports = {
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'bg-white',
+    'bg-slate-50',
+    'bg-gray-50',
+    'bg-gray-100',
+    'border-gray-200',
+    'text-gray-900',
+  ],
   theme: {
     extend: {
       colors: {

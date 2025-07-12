@@ -66,7 +66,8 @@
     border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: 'Inter', system-ui, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -77,7 +78,8 @@
 @layer components {
   /* Dashboard-specific styles */
   .dashboard-container {
-    @apply min-h-screen bg-slate-50/50;
+    min-height: 100vh;
+    background-color: #f8fafc;
   }
   
   .dashboard-header {

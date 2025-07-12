@@ -47,12 +47,14 @@ export async function POST(request: NextRequest) {
       validationErrors.push('Max margin must be greater than target margin and less than 90%');
     }
 
-    if (typeof config.outlierThreshold !== 'number' || config.outlierThreshold < 0.1 || config.outlierThreshold > 1.0) {
-      validationErrors.push('Outlier threshold must be between 10% and 100%');
+
+
+    if (typeof config.benchmarkTolerance !== 'number' || config.benchmarkTolerance < 0.05 || config.benchmarkTolerance > 0.5) {
+      validationErrors.push('Benchmark tolerance must be between 5% and 50%');
     }
 
-    if (typeof config.maxReasonablePrice !== 'number' || config.maxReasonablePrice < 20 || config.maxReasonablePrice > 100) {
-      validationErrors.push('Max reasonable price must be between $20 and $100');
+    if (typeof config.placeholderCostPerUnit !== 'number' || config.placeholderCostPerUnit < 10 || config.placeholderCostPerUnit > 100) {
+      validationErrors.push('Placeholder cost per unit must be between $10 and $100');
     }
 
     if (validationErrors.length > 0) {
@@ -66,8 +68,8 @@ export async function POST(request: NextRequest) {
     currentConfig = {
       targetMargin: config.targetMargin,
       maxMargin: config.maxMargin,
-      outlierThreshold: config.outlierThreshold,
-      maxReasonablePrice: config.maxReasonablePrice
+      benchmarkTolerance: config.benchmarkTolerance,
+      placeholderCostPerUnit: config.placeholderCostPerUnit
     };
 
     console.log('🎯 Pricing configuration updated:', currentConfig);

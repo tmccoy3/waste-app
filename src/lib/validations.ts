@@ -5,7 +5,10 @@ export const CustomerSchema = z.object({
   'HOA Name': z.string().min(1, 'HOA Name is required'),
   'Monthly Revenue': z.string().regex(/^\$?[\d,]+\.?\d*$/, 'Invalid revenue format'),
   'Full Address': z.string().min(1, 'Address is required'),
-  'Average Completion Time in Minutes': z.string().regex(/^\d+\.?\d*$/, 'Invalid time format'),
+  'Average Completion Time in Minutes': z.string().refine((val) => {
+    if (val === '' || val === null || val === undefined) return true;
+    return /^\d+\.?\d*$/.test(val);
+  }, 'Invalid time format'),
   'Service Status': z.enum(['Serviced', 'Pending', 'Cancelled'], {
     errorMap: () => ({ message: 'Service status must be Serviced, Pending, or Cancelled' })
   }),
@@ -13,7 +16,10 @@ export const CustomerSchema = z.object({
   'Type': z.enum(['HOA', 'Subscription', 'Commercial'], {
     errorMap: () => ({ message: 'Type must be HOA, Subscription, or Commercial' })
   }),
-  'Number of Units': z.string().regex(/^\d+$/, 'Number of units must be a number').optional(),
+  'Number of Units': z.string().refine((val) => {
+    if (!val || val === '') return true;
+    return /^\d+$/.test(val);
+  }, 'Number of units must be a number').optional(),
 });
 
 export const CustomerArraySchema = z.array(CustomerSchema);
@@ -141,7 +147,8 @@ export const ValidationErrorSchema = z.object({
 export function parseCustomerData(data: unknown): z.infer<typeof CustomerSchema>[] {
   const result = CustomerArraySchema.safeParse(data);
   if (!result.success) {
-    throw new Error(`Invalid customer data: ${result.error.message}`);
+    console.error('Customer data validation error:', result.error.format());
+    throw new Error(`Invalid customer data: ${JSON.stringify(result.error.issues, null, 2)}`);
   }
   return result.data;
 }

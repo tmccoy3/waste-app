@@ -28,7 +28,7 @@ interface ExecutiveKPIs {
 }
 
 export default function ExecutiveDashboardTop({ customers, lastUpdated }: ExecutiveDashboardTopProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>(() => 'executive')
+  const [viewMode, setViewMode] = useState<ViewMode>('executive')
   const [contractFilter, setContractFilter] = useState<'all' | 'hoa' | 'subscription'>('all')
 
   // Calculate executive KPIs from real customer data (always run hooks in same order)
@@ -213,11 +213,11 @@ export default function ExecutiveDashboardTop({ customers, lastUpdated }: Execut
   )
 
   // Handle different view modes
-  if (viewMode === 'operations') {
+  if (viewMode === 'operations' as ViewMode) {
     return renderOperationsView()
   }
   
-  if (viewMode === 'sales') {
+  if (viewMode === 'sales' as ViewMode) {
     return renderSalesView()
   }
   

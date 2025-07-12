@@ -437,30 +437,37 @@ class TimeeroApiClient {
   }
 }
 
-// Create singleton instance
-const timeeroClient = new TimeeroApiClient();
+// Lazy-loaded singleton instance
+let timeeroClient: TimeeroApiClient | null = null;
+
+function getTimeeroClient(): TimeeroApiClient {
+  if (!timeeroClient) {
+    timeeroClient = new TimeeroApiClient();
+  }
+  return timeeroClient;
+}
 
 // Export convenience functions
 export const getGpsData = (userId: number, startDate: string, endDate: string): Promise<GpsLocation[]> =>
-  timeeroClient.getGpsData(userId, startDate, endDate);
+  getTimeeroClient().getGpsData(userId, startDate, endDate);
 
 export const getMileage = (userId: number, startDate: string, endDate: string): Promise<MileageEntry[]> =>
-  timeeroClient.getMileage(userId, startDate, endDate);
+  getTimeeroClient().getMileage(userId, startDate, endDate);
 
 export const getTimesheets = (userId: number, startDate: string, endDate: string): Promise<TimesheetEntry[]> =>
-  timeeroClient.getTimesheets(userId, startDate, endDate);
+  getTimeeroClient().getTimesheets(userId, startDate, endDate);
 
 export const getScheduledJobs = (userId: number, startDate: string, endDate: string): Promise<ScheduledJob[]> =>
-  timeeroClient.getScheduledJobs(userId, startDate, endDate);
+  getTimeeroClient().getScheduledJobs(userId, startDate, endDate);
 
 export const getRouteAnalysisData = (userId: number, startDate: string, endDate: string) =>
-  timeeroClient.getRouteAnalysisData(userId, startDate, endDate);
+  getTimeeroClient().getRouteAnalysisData(userId, startDate, endDate);
 
 export const getTeamPerformanceData = (userIds: number[], startDate: string, endDate: string) =>
-  timeeroClient.getTeamPerformanceData(userIds, startDate, endDate);
+  getTimeeroClient().getTeamPerformanceData(userIds, startDate, endDate);
 
 export const getUsers = (): Promise<TimeeroUser[]> =>
-  timeeroClient.getUsers();
+  getTimeeroClient().getUsers();
 
 // Export types for use in other modules
 export type {
@@ -474,4 +481,4 @@ export type {
 };
 
 // Export the client instance for advanced usage
-export { timeeroClient }; 
+export const getTimeeroApiClient = (): TimeeroApiClient => getTimeeroClient(); 

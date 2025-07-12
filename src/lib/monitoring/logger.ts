@@ -96,7 +96,7 @@ class CentralizedLogger {
     if (this.config.enableSentry && this.config.sentryDsn) {
       try {
         // Dynamic import to avoid issues if Sentry is not installed
-        // @ts-ignore - Optional dependency
+        // @ts-expect-error - Optional dependency
         import('@sentry/nextjs').then((Sentry) => {
           Sentry.init({
             dsn: this.config.sentryDsn,
@@ -239,7 +239,7 @@ class CentralizedLogger {
   // Sentry logging
   private async logToSentry(entry: LogEntry): Promise<void> {
     try {
-      // @ts-ignore - Optional dependency
+      // @ts-expect-error - Optional dependency
       const Sentry = await import('@sentry/nextjs');
       
       Sentry.withScope((scope: any) => {

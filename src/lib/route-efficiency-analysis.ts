@@ -321,7 +321,7 @@ export function analyzeDailyRoute(
   // Calculate summary metrics
   const totalDistance = mileageData.reduce((sum, entry) => sum + entry.distance_miles, 0);
   const totalDuration = routeSegments.reduce((sum, segment) => sum + segment.duration, 0);
-  const workingHours = timesheetData.reduce((sum, entry) => sum + entry.total_hours, 0);
+  const workingHours = timesheetData.reduce((sum, entry) => sum + (entry.total_hours || 0), 0);
   const breakTime = routeStops
     .filter(stop => stop.stopType === 'break')
     .reduce((sum, stop) => sum + stop.stopDuration, 0);
@@ -422,7 +422,8 @@ export function analyzeFleetRoutes(dailyAnalyses: DailyRouteAnalysis[]): FleetRo
   });
 
   if (sortedByEfficiency.length > 0) {
-    teamSummary.topPerformer = sortedByEfficiency[0].user?.name || `User ${sortedByEfficiency[0].userId}`;
+    const topUser = sortedByEfficiency[0].user;
+    teamSummary.topPerformer = topUser ? `${topUser.first_name} ${topUser.last_name}` : `User ${sortedByEfficiency[0].userId}`;
   }
 
   // Identify drivers needing attention
@@ -432,7 +433,10 @@ export function analyzeFleetRoutes(dailyAnalyses: DailyRouteAnalysis[]): FleetRo
       analysis.summary.onTimePercentage < 70 ||
       analysis.insights.riskFlags.length > 2
     )
-    .map(analysis => analysis.user?.name || `User ${analysis.userId}`);
+    .map(analysis => {
+      const user = analysis.user;
+      return user ? `${user.first_name} ${user.last_name}` : `User ${analysis.userId}`;
+    });
 
   // Calculate benchmarks
   const benchmarks = {

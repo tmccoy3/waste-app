@@ -71,7 +71,7 @@ export default function ExecutiveCustomerDashboard({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Company Alerts</h3>
-                <p className="text-sm text-slate-600">Send instant notifications to your team's Google Chat space</p>
+                <p className="text-sm text-slate-600">Send instant notifications to your team&apos;s Google Chat space</p>
               </div>
             </div>
             <Button className="bg-blue-600 hover:bg-blue-700">

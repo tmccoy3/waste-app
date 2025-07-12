@@ -271,7 +271,7 @@ export function withPermission<P extends object>(
               Access Denied
             </h2>
             <p className="text-gray-500">
-              You don't have permission to access this resource.
+              You don&apos;t have permission to access this resource.
             </p>
           </div>
         </div>
@@ -304,7 +304,7 @@ export function withRole<P extends object>(
               Access Denied
             </h2>
             <p className="text-gray-500">
-              Your role ({user?.role}) doesn't have access to this resource.
+              Your role ({user?.role}) doesn&apos;t have access to this resource.
             </p>
           </div>
         </div>
