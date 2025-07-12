@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
-  title: "Waste Ops Intelligence",
-  description: "Comprehensive waste management operations intelligence platform",
+  title: "WasteOps Intelligence",
+  description: "Advanced waste management operations intelligence platform",
 };
 
 export default function RootLayout({
@@ -13,14 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link 
-          rel="stylesheet" 
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" 
-        />
-      </head>
-      <body className="font-sans antialiased">
-        <div className="min-h-screen bg-background text-foreground">
+      <body className={inter.className}>
+        <div className="min-h-screen bg-slate-50 text-slate-900">
           {children}
         </div>
       </body>
