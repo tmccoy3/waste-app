@@ -1,47 +1,16 @@
 'use client';
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip as RechartsTooltip, 
-  Legend, 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell 
-} from 'recharts';
-import { 
-  RefreshCw, 
-  FileText, 
-  Send, 
-  AlertCircle, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  DollarSign, 
-  Clock, 
-  Building, 
-  Search, 
-  ArrowUpDown, 
-  ChevronLeft, 
-  ChevronRight, 
-  Download, 
-  Eye, 
-  Filter,
-  MapPin 
-} from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { ArrowUp, ArrowUpDown, RefreshCw, FileText, Send, AlertCircle } from 'lucide-react';
+// Static import for better reliability
+import customersData from '@/data/geocoded_customers.json';
 
-// TypeScript Interfaces
 interface Customer {
   'HOA Name': string;
   'Monthly Revenue': string;
@@ -51,732 +20,467 @@ interface Customer {
   'Unit Type': string;
   'Type': string;
   'Number of Units': string;
-  [key: string]: any; // Allow additional properties from JSON
+  [key: string]: any;
 }
 
-interface ProcessedMetrics {
-  activeCustomers: number;
-  totalRevenue: number;
-  avgCompletionTime: number;
-  revenuePerMinute: number;
-  efficiencyGain: number;
-  pendingCustomers: number;
-  totalUnits: number;
-}
-
-interface ChartData {
-  revenueTrends: Array<{
-    month: string;
-    HOA: number;
-    Subscription: number;
-    Commercial: number;
-    total: number;
-    growth: string;
-  }>;
-  efficiencyScores: Array<{
-    name: string;
-    value: number;
-    percentage: number;
-  }>;
-  serviceStatusBreakdown: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
-}
-
-// Enhanced Loading Component with Animation
-const LoadingDashboard: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-      <p className="text-lg font-medium text-slate-600">Loading Executive Dashboard...</p>
-      <p className="text-sm text-slate-500">Aggregating customer data and analytics</p>
-    </div>
-  </div>
-);
-
-// Enhanced Error Component with Retry
-const ErrorDashboard: React.FC<{ error: string; onRetry: () => void }> = ({ error, onRetry }) => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-    <Card className="w-96 shadow-xl">
-      <CardContent className="p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-slate-700 mb-2">Dashboard Error</h3>
-        <p className="text-sm text-slate-500 mb-4">{error}</p>
-        <Button onClick={onRetry} className="w-full">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Retry Loading
-        </Button>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-// Enhanced Executive Header Component
-const DashboardHeader: React.FC<{
-  search: string;
-  onSearchChange: (search: string) => void;
-  onRefresh: () => void;
-  onExportCSV: () => void;
-  onSendAlert: () => void;
-  metrics: ProcessedMetrics;
-}> = ({ search, onSearchChange, onRefresh, onExportCSV, onSendAlert, metrics }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">
-          Waste Operations Intelligence
-        </h1>
-        <p className="text-slate-600">
-          Executive Dashboard • Real-time Operations Analytics
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={onRefresh}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Refresh dashboard data</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={onExportCSV}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Export customer data to CSV</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="sm" onClick={onSendAlert}>
-                <Send className="h-4 w-4 mr-2" />
-                Alert
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Send executive alert</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-    </div>
-    
-    <div className="flex flex-col md:flex-row gap-4 items-center">
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search customers, locations, service types..."
-          className="pl-10"
-        />
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <Badge variant="secondary" className="text-sm">
-          {metrics.activeCustomers} Active Customers
-        </Badge>
-        <Badge variant="secondary" className="text-sm">
-          ${metrics.totalRevenue.toLocaleString()} Monthly Revenue
-        </Badge>
-      </div>
-    </div>
-  </div>
-);
-
-// Enhanced Metrics Cards Component with Icons and Tooltips
-const MetricsCards: React.FC<{ metrics: ProcessedMetrics }> = ({ metrics }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-    <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-700">Active Customers</CardTitle>
-        <Users className="h-5 w-5 text-blue-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-blue-900">{metrics.activeCustomers}</div>
-        <div className="flex items-center mt-1">
-          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-          <span className="text-xs text-green-600">+12% from last month</span>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-700">Monthly Revenue</CardTitle>
-        <DollarSign className="h-5 w-5 text-green-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-green-900">
-          ${metrics.totalRevenue.toLocaleString()}
-        </div>
-        <div className="flex items-center mt-1">
-          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-          <span className="text-xs text-green-600">+{metrics.efficiencyGain}% growth</span>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-lg transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-700">Avg Completion Time</CardTitle>
-        <Clock className="h-5 w-5 text-yellow-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-yellow-900">
-          {metrics.avgCompletionTime.toFixed(1)}m
-        </div>
-        <div className="flex items-center mt-1">
-          <TrendingDown className="h-4 w-4 text-green-600 mr-1" />
-          <span className="text-xs text-green-600">-15% improvement</span>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-700">Revenue/Minute</CardTitle>
-        <TrendingUp className="h-5 w-5 text-purple-600" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-purple-900">
-          ${metrics.revenuePerMinute.toFixed(0)}
-        </div>
-        <div className="flex items-center mt-1">
-          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-          <span className="text-xs text-green-600">Efficiency metric</span>
-        </div>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-// Enhanced Dashboard Charts Component
-const DashboardCharts: React.FC<{ chartData: ChartData }> = ({ chartData }) => {
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-  
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart className="h-5 w-5" />
-            Revenue Trends by Service Type
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData.revenueTrends}>
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`} />
-              <RechartsTooltip 
-                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-                labelFormatter={(label) => `Month: ${label}`}
-              />
-              <Legend />
-              <Bar dataKey="HOA" fill={COLORS[0]} name="HOA Services" />
-              <Bar dataKey="Subscription" fill={COLORS[1]} name="Subscription Services" />
-              <Bar dataKey="Commercial" fill={COLORS[2]} name="Commercial Services" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5" />
-            Service Type Distribution
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={chartData.efficiencyScores}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
-                outerRadius={120}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {chartData.efficiencyScores.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <RechartsTooltip 
-                formatter={(value: number) => [`${value}`, 'Customers']}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Enhanced Customer Table Component with Sort, Pagination, Search
-const CustomerTable: React.FC<{
-  customers: Customer[];
-  search: string;
-  onSearchChange: (search: string) => void;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  totalCustomers: number;
-  pageSize: number;
-}> = ({ customers, search, onSearchChange, currentPage, totalPages, onPageChange, totalCustomers, pageSize }) => {
-  
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Serviced':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
-      case 'Pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'HOA':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">HOA</Badge>;
-      case 'Subscription':
-        return <Badge variant="default" className="bg-purple-100 text-purple-800">Subscription</Badge>;
-      case 'Commercial':
-        return <Badge variant="default" className="bg-orange-100 text-orange-800">Commercial</Badge>;
-      default:
-        return <Badge variant="outline">{type}</Badge>;
-    }
-  };
-
-  return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Customer Operations
-          </CardTitle>
-          <div className="text-sm text-slate-500">
-            Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCustomers)} of {totalCustomers} customers
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Customer Name</TableHead>
-                  <TableHead className="w-[250px]">Address</TableHead>
-                  <TableHead className="w-[100px]">Type</TableHead>
-                  <TableHead className="w-[100px]">Status</TableHead>
-                  <TableHead className="w-[100px]">Units</TableHead>
-                  <TableHead className="w-[120px]">Revenue</TableHead>
-                  <TableHead className="w-[100px]">Efficiency</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer, index) => (
-                  <TableRow key={index} className="hover:bg-slate-50">
-                    <TableCell className="font-medium whitespace-normal">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-slate-400" />
-                        {customer['HOA Name']}
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-normal">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-slate-400" />
-                        {customer['Full Address']}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getTypeBadge(customer['Type'])}</TableCell>
-                    <TableCell>{getStatusBadge(customer['Service Status'])}</TableCell>
-                    <TableCell>{customer['Number of Units']}</TableCell>
-                    <TableCell className="font-medium">
-                      ${parseFloat(customer['Monthly Revenue']?.replace(/[$,]/g, '') || '0').toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4 text-slate-400" />
-                        {customer['Average Completion Time in Minutes'] || '0'}m
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onPageChange(page)}
-                    >
-                      {page}
-                    </Button>
-                  );
-                })}
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-            
-            <div className="text-sm text-slate-500">
-              Page {currentPage} of {totalPages}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Placeholder Tab Component
-const PlaceholderTab: React.FC<{ 
-  title: string; 
-  description: string; 
-  icon: React.ReactNode;
-  comingSoonDate?: string;
-}> = ({ title, description, icon, comingSoonDate = "Q2 2024" }) => (
-  <Card className="shadow-lg">
-    <CardContent className="p-12 text-center">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold text-slate-700 mb-2">{title}</h3>
-      <p className="text-slate-500 mb-4">{description}</p>
-      <Badge variant="outline">Coming Soon • {comingSoonDate}</Badge>
-    </CardContent>
-  </Card>
-);
-
-// Main Dashboard Component
 export default function Dashboard() {
-  const [customerData, setCustomerData] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [sortColumn, setSortColumn] = useState('HOA Name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load customer data with error handling
   useEffect(() => {
-    const loadCustomerData = async () => {
-      try {
-        setLoading(true);
-        // Import the JSON data from the root data directory
-        const data = await import('@/data/geocoded_customers.json');
-        const customers = data.default || data;
-        
-        if (!Array.isArray(customers)) {
-          throw new Error('Invalid customer data format');
-        }
-        
-        setCustomerData(customers);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load customer data:', err);
-        setError('Failed to load customer data. Please check the data file and try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCustomerData();
+    try {
+      // Use static import data directly
+      const customers = customersData as Customer[];
+      
+      // Set Service Status based on existing data structure
+      const processedCustomers = customers.map(customer => ({
+        ...customer,
+        'Service Status': customer['Service Status'] || 'Serviced' // Default to Serviced if not specified
+      }));
+      
+      setData(processedCustomers);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('Failed to load customer data');
+      setIsLoading(false);
+    }
   }, []);
 
-  // Enhanced data processing with robust error handling
-  const processedData = useMemo(() => {
-    if (!customerData.length) return null;
+  const filteredData = useMemo(() => 
+    data.filter(c => c['HOA Name'].toLowerCase().includes(search.toLowerCase())), 
+    [data, search]
+  );
 
-    try {
-      // Filter data based on search
-      const filteredData = customerData.filter(customer => 
-        customer['HOA Name']?.toLowerCase().includes(search.toLowerCase()) ||
-        customer['Full Address']?.toLowerCase().includes(search.toLowerCase()) ||
-        customer['Type']?.toLowerCase().includes(search.toLowerCase())
-      );
+  const sortedData = useMemo(() => {
+    return [...filteredData].sort((a, b) => {
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
+      if (sortColumn === 'Monthly Revenue' || sortColumn === 'Average Completion Time in Minutes') {
+        aValue = parseFloat(String(aValue).replace(/[,$]/g, '')) || 0;
+        bValue = parseFloat(String(bValue).replace(/[,$]/g, '')) || 0;
+      }
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredData, sortColumn, sortDirection]);
 
-      // Calculate comprehensive metrics with error handling
-      const activeCustomers = filteredData.filter(c => c['Service Status'] === 'Serviced').length;
-      const pendingCustomers = filteredData.filter(c => c['Service Status'] === 'Pending').length;
-      
-      const totalRevenue = filteredData.reduce((acc, c) => {
-        try {
-          const revenue = parseFloat(c['Monthly Revenue']?.replace(/[$,]/g, '') || '0');
-          return acc + (isNaN(revenue) ? 0 : revenue);
-        } catch {
-          return acc;
-        }
-      }, 0);
-      
-      const totalCompletionTime = filteredData.reduce((acc, c) => {
-        try {
-          const time = parseFloat(c['Average Completion Time in Minutes'] || '0');
-          return acc + (isNaN(time) ? 0 : time);
-        } catch {
-          return acc;
-        }
-      }, 0);
-      
-      const avgCompletionTime = totalCompletionTime / (filteredData.length || 1);
-      const revenuePerMinute = totalRevenue / (totalCompletionTime || 1);
-      
-      const totalUnits = filteredData.reduce((acc, c) => {
-        try {
-          const units = parseFloat(c['Number of Units'] || '0');
-          return acc + (isNaN(units) ? 0 : units);
-        } catch {
-          return acc;
-        }
-      }, 0);
+  const paginatedData = sortedData.slice((page - 1) * pageSize, page * pageSize);
 
-      const metrics: ProcessedMetrics = {
-        activeCustomers,
-        pendingCustomers,
-        totalRevenue,
-        avgCompletionTime,
-        revenuePerMinute,
-        efficiencyGain: 8.1,
-        totalUnits
-      };
+  const metrics = useMemo(() => {
+    const active = filteredData.filter(c => c['Service Status'] === 'Serviced').length;
+    const revenue = filteredData.reduce((acc, c) => {
+      const revenueStr = String(c['Monthly Revenue'] || '0').replace(/[,$]/g, '');
+      return acc + (parseFloat(revenueStr) || 0);
+    }, 0);
+    const avgTime = filteredData.reduce((acc, c) => {
+      const timeStr = String(c['Average Completion Time in Minutes'] || '0');
+      return acc + (parseFloat(timeStr) || 0);
+    }, 0) / filteredData.length || 0;
+    const revPerMin = revenue / (avgTime * active) || 0;
+    return { 
+      activeCustomers: active, 
+      monthlyRevenue: revenue, 
+      hoaAvgTime: avgTime, 
+      revenuePerMinute: revPerMin, 
+      efficiencyGain: 8.1 
+    };
+  }, [filteredData]);
 
-      // Generate enhanced chart data
-      const baseRevenue = totalRevenue / 6; // Distribute across 6 months
-      const revenueTrends = [
-        { month: 'Jan', HOA: baseRevenue * 0.6, Subscription: baseRevenue * 0.25, Commercial: baseRevenue * 0.15, total: baseRevenue, growth: '+2.3%' },
-        { month: 'Feb', HOA: baseRevenue * 0.62, Subscription: baseRevenue * 0.23, Commercial: baseRevenue * 0.15, total: baseRevenue * 1.05, growth: '+3.1%' },
-        { month: 'Mar', HOA: baseRevenue * 0.65, Subscription: baseRevenue * 0.22, Commercial: baseRevenue * 0.13, total: baseRevenue * 1.1, growth: '+2.8%' },
-        { month: 'Apr', HOA: baseRevenue * 0.67, Subscription: baseRevenue * 0.21, Commercial: baseRevenue * 0.12, total: baseRevenue * 1.15, growth: '+4.2%' },
-        { month: 'May', HOA: baseRevenue * 0.69, Subscription: baseRevenue * 0.20, Commercial: baseRevenue * 0.11, total: baseRevenue * 1.18, growth: '+1.9%' },
-        { month: 'Jun', HOA: baseRevenue * 0.70, Subscription: baseRevenue * 0.20, Commercial: baseRevenue * 0.10, total: baseRevenue * 1.2, growth: '+3.5%' },
-      ];
+  const revenueTrends = useMemo(() => [
+    { month: 'Mar', HOA: 50000, Subscription: 75000, Commercial: 50000, growth: 2.3 },
+    { month: 'Apr', HOA: 55000, Subscription: 80000, Commercial: 55000, growth: 4.8 },
+    { month: 'May', HOA: 60000, Subscription: 85000, Commercial: 60000, growth: -3.3 },
+    { month: 'Jun', HOA: 65000, Subscription: 90000, Commercial: 65000, growth: 7.0 },
+    { month: 'Jul', HOA: 70000, Subscription: 95000, Commercial: 70000, growth: -0.5 },
+  ], []);
 
-      // Calculate service type distribution
-      const serviceTypeCount = filteredData.reduce((acc, customer) => {
-        const type = customer['Type'] || 'HOA';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+  const efficiencyScores = useMemo(() => [
+    { name: 'HOA', value: 93 },
+    { name: 'Subscription', value: 4 },
+    { name: 'Commercial', value: 3 },
+  ], []);
 
-      const efficiencyScores = Object.entries(serviceTypeCount).map(([name, count]) => ({
-        name,
-        value: count,
-        percentage: Math.round((count / filteredData.length) * 100)
-      }));
+  const COLORS = ['#3b82f6', '#34d399', '#fbbf24'];
 
-      const serviceStatusBreakdown = [
-        { name: 'Serviced', value: activeCustomers, color: '#10b981' },
-        { name: 'Pending', value: pendingCustomers, color: '#f59e0b' },
-        { name: 'Cancelled', value: filteredData.length - activeCustomers - pendingCustomers, color: '#ef4444' }
-      ].filter(item => item.value > 0);
-
-      const chartData: ChartData = {
-        revenueTrends,
-        efficiencyScores,
-        serviceStatusBreakdown
-      };
-
-      // Pagination
-      const totalPages = Math.ceil(filteredData.length / pageSize);
-      const startIndex = (currentPage - 1) * pageSize;
-      const paginatedData = filteredData.slice(startIndex, startIndex + pageSize);
-
-      return {
-        filteredData,
-        paginatedData,
-        metrics,
-        chartData,
-        totalPages,
-        totalCustomers: filteredData.length
-      };
-    } catch (err) {
-      console.error('Error processing data:', err);
-      return null;
-    }
-  }, [customerData, search, currentPage]);
-
-  // Enhanced event handlers
   const handleRefresh = () => {
-    window.location.reload();
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
   };
 
   const handleExportCSV = () => {
-    if (!processedData) return;
+    const csvContent = [
+      ['HOA Name', 'Address', 'Monthly Revenue', 'Completion Time', 'Service Status', 'Unit Type'],
+      ...filteredData.map(c => [
+        c['HOA Name'],
+        c['Full Address'],
+        c['Monthly Revenue'],
+        c['Average Completion Time in Minutes'],
+        c['Service Status'],
+        c['Unit Type']
+      ])
+    ].map(row => row.join(',')).join('\n');
     
-    try {
-      const csvHeaders = ['HOA Name', 'Full Address', 'Type', 'Service Status', 'Number of Units', 'Monthly Revenue', 'Average Completion Time'];
-      const csvRows = processedData.filteredData.map(customer => 
-        csvHeaders.map(header => `"${customer[header] || ''}"`).join(',')
-      );
-      
-      const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', `waste-ops-customers-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Failed to export CSV:', err);
-    }
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `waste-ops-customers-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleSendAlert = () => {
-    alert('Executive alert sent to stakeholders!');
-  };
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-screen">
+      <RefreshCw className="h-8 w-8 animate-spin mr-2" />
+      Loading dashboard...
+    </div>
+  );
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleSearchChange = (newSearch: string) => {
-    setSearch(newSearch);
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  // Render loading state
-  if (loading) return <LoadingDashboard />;
-
-  // Render error state
-  if (error) return <ErrorDashboard error={error} onRetry={handleRefresh} />;
-
-  // Render no data state
-  if (!processedData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <Card className="w-96 shadow-xl">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">No Data Available</h3>
-            <p className="text-sm text-slate-500 mb-4">Unable to load customer data for analysis.</p>
-            <Button onClick={handleRefresh} className="w-full">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry Loading
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  if (error) return (
+    <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <AlertCircle className="h-8 w-8 text-red-500" />
+      <p className="text-red-500">{error}</p>
+      <Button onClick={handleRefresh} variant="outline">
+        <RefreshCw className="mr-2 h-4 w-4" />
+        Retry
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <TooltipProvider>
-        <div className="p-6 space-y-6">
-          <DashboardHeader
-            search={search}
-            onSearchChange={handleSearchChange}
-            onRefresh={handleRefresh}
-            onExportCSV={handleExportCSV}
-            onSendAlert={handleSendAlert}
-            metrics={processedData.metrics}
-          />
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50 text-gray-900 p-6 space-y-6">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">WasteOps Intelligence</h1>
+            <p className="text-gray-600 mt-1">Comprehensive operations dashboard</p>
+          </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <Input 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              placeholder="Search customers..." 
+              className="w-64" 
+            />
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+            </Button>
+            <Button variant="outline" onClick={handleExportCSV}>
+              <FileText className="mr-2 h-4 w-4" /> Export CSV
+            </Button>
+            <Button variant="outline">
+              <FileText className="mr-2 h-4 w-4" /> Export PDF
+            </Button>
+            <Button variant="default">
+              <Send className="mr-2 h-4 w-4" /> Send Alert
+            </Button>
+          </div>
+        </header>
 
-          <MetricsCards metrics={processedData.metrics} />
+        <Tabs defaultValue="all" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all">All Customers</TabsTrigger>
+            <TabsTrigger value="hoa">HOA Clusters</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="profitability">Profitability</TabsTrigger>
+          </TabsList>
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="customers">Customers</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-            </TabsList>
+          <TabsContent value="all" className="space-y-6">
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-white shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Active Customers</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Currently serviced customers</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">{metrics.activeCustomers}</div>
+                  <p className="text-xs text-gray-500">+12% from last month</p>
+                </CardContent>
+              </Card>
 
-            <TabsContent value="overview" className="space-y-6">
-              <DashboardCharts chartData={processedData.chartData} />
-              <CustomerTable
-                customers={processedData.paginatedData}
-                search={search}
-                onSearchChange={handleSearchChange}
-                currentPage={currentPage}
-                totalPages={processedData.totalPages}
-                onPageChange={handlePageChange}
-                totalCustomers={processedData.totalCustomers}
-                pageSize={pageSize}
-              />
-            </TabsContent>
+              <Card className="bg-white shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Monthly Revenue</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Total recurring monthly revenue</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${metrics.monthlyRevenue.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-500">+8% from last month</p>
+                </CardContent>
+              </Card>
 
-            <TabsContent value="analytics">
-              <PlaceholderTab
-                title="Advanced Analytics"
-                description="Detailed analytics and performance insights"
-                icon={<TrendingUp className="h-12 w-12 text-slate-400" />}
-                comingSoonDate="Q2 2024"
-              />
-            </TabsContent>
+              <Card className="bg-white shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Avg Completion Time</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <ArrowUp className="h-4 w-4 text-blue-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Average service completion time</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {metrics.hoaAvgTime.toFixed(1)} min
+                  </div>
+                  <p className="text-xs text-gray-500">-5% improvement</p>
+                </CardContent>
+              </Card>
 
-            <TabsContent value="customers">
-              <CustomerTable
-                customers={processedData.paginatedData}
-                search={search}
-                onSearchChange={handleSearchChange}
-                currentPage={currentPage}
-                totalPages={processedData.totalPages}
-                onPageChange={handlePageChange}
-                totalCustomers={processedData.totalCustomers}
-                pageSize={pageSize}
-              />
-            </TabsContent>
+              <Card className="bg-white shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">Revenue/Minute</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Revenue efficiency per minute</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${metrics.revenuePerMinute.toFixed(0)}
+                  </div>
+                  <p className="text-xs text-gray-500">+{metrics.efficiencyGain}% efficiency</p>
+                </CardContent>
+              </Card>
+            </div>
 
-            <TabsContent value="reports">
-              <PlaceholderTab
-                title="Executive Reports"
-                description="Comprehensive reporting and data export tools"
-                icon={<FileText className="h-12 w-12 text-slate-400" />}
-                comingSoonDate="Q2 2024"
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </TooltipProvider>
-    </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">Monthly Revenue Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={revenueTrends} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="HOA" stackId="a" fill={COLORS[0]} />
+                      <Bar dataKey="Subscription" stackId="a" fill={COLORS[1]} />
+                      <Bar dataKey="Commercial" stackId="a" fill={COLORS[2]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">Service Efficiency by Customer Type</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie 
+                        data={efficiencyScores} 
+                        cx="50%" 
+                        cy="50%" 
+                        labelLine={false} 
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} 
+                        outerRadius={80} 
+                        fill="#8884d8" 
+                        dataKey="value"
+                      >
+                        {efficiencyScores.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Customer Table */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">Customer Management</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {filteredData.length} customers found
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead 
+                          onClick={() => handleSort('HOA Name')} 
+                          className="cursor-pointer hover:bg-gray-50"
+                        >
+                          <div className="flex items-center">
+                            Name 
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </div>
+                        </TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead 
+                          onClick={() => handleSort('Monthly Revenue')} 
+                          className="cursor-pointer hover:bg-gray-50"
+                        >
+                          <div className="flex items-center">
+                            Revenue 
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          onClick={() => handleSort('Average Completion Time in Minutes')} 
+                          className="cursor-pointer hover:bg-gray-50"
+                        >
+                          <div className="flex items-center">
+                            Efficiency 
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </div>
+                        </TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedData.map((customer, index) => (
+                        <TableRow key={index} className="hover:bg-gray-50">
+                          <TableCell className="font-medium whitespace-normal">
+                            {customer['HOA Name']}
+                          </TableCell>
+                          <TableCell className="whitespace-normal max-w-xs">
+                            {customer['Full Address']}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            ${parseFloat(String(customer['Monthly Revenue'] || '0').replace(/[,$]/g, '')).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            {customer['Average Completion Time in Minutes'] || 'N/A'} min
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {customer['Unit Type']}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              customer['Service Status'] === 'Serviced' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {customer['Service Status']}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {/* Pagination */}
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-gray-500">
+                    Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, sortedData.length)} of {sortedData.length} customers
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={page === 1} 
+                      onClick={() => setPage(p => p - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <span className="flex items-center px-3 py-1 text-sm">
+                      Page {page} of {Math.ceil(sortedData.length / pageSize)}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={page * pageSize >= sortedData.length} 
+                      onClick={() => setPage(p => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="hoa" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>HOA Clusters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500">HOA cluster analysis coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="subscriptions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500">Subscription analytics coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="profitability" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profitability Analysis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500">Profitability metrics coming soon...</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </TooltipProvider>
   );
 } 
