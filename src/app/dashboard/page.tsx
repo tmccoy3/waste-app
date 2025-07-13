@@ -8,28 +8,40 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip as RechartsTooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell 
+} from 'recharts';
 import { 
   RefreshCw, 
   FileText, 
   Send, 
   AlertCircle, 
   TrendingUp, 
-  TrendingDown,
+  TrendingDown, 
   Users, 
   DollarSign, 
   Clock, 
-  Building,
-  Search,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Eye,
-  Filter
+  Building, 
+  Search, 
+  ArrowUpDown, 
+  ChevronLeft, 
+  ChevronRight, 
+  Download, 
+  Eye, 
+  Filter,
+  MapPin 
 } from 'lucide-react';
 
-// Enhanced interfaces for robust data handling
+// TypeScript Interfaces
 interface Customer {
   'HOA Name': string;
   'Monthly Revenue': string;
@@ -76,30 +88,24 @@ interface ChartData {
 // Enhanced Loading Component with Animation
 const LoadingDashboard: React.FC = () => (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-    <Card className="w-96 shadow-xl">
-      <CardContent className="p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <h3 className="text-lg font-semibold text-slate-700 mb-2">Loading WasteOps Intelligence</h3>
-        <p className="text-slate-500">Preparing your executive dashboard...</p>
-      </CardContent>
-    </Card>
+    <div className="text-center space-y-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      <p className="text-lg font-medium text-slate-600">Loading Executive Dashboard...</p>
+      <p className="text-sm text-slate-500">Aggregating customer data and analytics</p>
+    </div>
   </div>
 );
 
-// Enhanced Error Component
+// Enhanced Error Component with Retry
 const ErrorDashboard: React.FC<{ error: string; onRetry: () => void }> = ({ error, onRetry }) => (
-  <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
-    <Card className="max-w-md w-full shadow-xl">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-red-600" />
-        </div>
-        <CardTitle className="text-xl font-bold text-slate-900">Dashboard Error</CardTitle>
-      </CardHeader>
-      <CardContent className="text-center space-y-4">
-        <p className="text-slate-600">{error}</p>
-        <Button onClick={onRetry} className="w-full bg-red-600 hover:bg-red-700">
-          <RefreshCw className="w-4 h-4 mr-2" />
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+    <Card className="w-96 shadow-xl">
+      <CardContent className="p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-slate-700 mb-2">Dashboard Error</h3>
+        <p className="text-sm text-slate-500 mb-4">{error}</p>
+        <Button onClick={onRetry} className="w-full">
+          <RefreshCw className="mr-2 h-4 w-4" />
           Retry Loading
         </Button>
       </CardContent>
@@ -116,138 +122,139 @@ const DashboardHeader: React.FC<{
   onSendAlert: () => void;
   metrics: ProcessedMetrics;
 }> = ({ search, onSearchChange, onRefresh, onExportCSV, onSendAlert, metrics }) => (
-  <Card className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white shadow-2xl">
-    <CardHeader>
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div className="space-y-2">
-          <CardTitle className="text-3xl font-bold tracking-tight">
-            WasteOps Intelligence Dashboard
-          </CardTitle>
-          <p className="text-blue-100 text-lg">
-            Executive Operations Overview • {metrics.activeCustomers} Active Customers • ${metrics.totalRevenue.toLocaleString()} Revenue
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 w-4 h-4" />
-            <Input
-              type="text"
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search customers, locations..."
-              className="pl-10 pr-4 py-2 bg-white/10 border-white/20 text-white placeholder-blue-200 focus:bg-white/20 focus:border-white/40 min-w-[250px]"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="secondary" size="sm" onClick={onRefresh} className="bg-white/10 hover:bg-white/20 text-white border-white/20">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh dashboard data</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="secondary" size="sm" onClick={onExportCSV} className="bg-white/10 hover:bg-white/20 text-white border-white/20">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Export customer data to CSV</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="default" size="sm" onClick={onSendAlert} className="bg-green-600 hover:bg-green-700 text-white">
-                  <Send className="w-4 h-4 mr-2" />
-                  Alert
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Send executive alert</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
+  <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800 mb-2">
+          Waste Operations Intelligence
+        </h1>
+        <p className="text-slate-600">
+          Executive Dashboard • Real-time Operations Analytics
+        </p>
       </div>
-    </CardHeader>
-  </Card>
+      <div className="flex gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={onRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Refresh dashboard data</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={onExportCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export customer data to CSV</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" onClick={onSendAlert}>
+                <Send className="h-4 w-4 mr-2" />
+                Alert
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Send executive alert</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
+    
+    <div className="flex flex-col md:flex-row gap-4 items-center">
+      <div className="relative flex-1 max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Input
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search customers, locations, service types..."
+          className="pl-10"
+        />
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <Badge variant="secondary" className="text-sm">
+          {metrics.activeCustomers} Active Customers
+        </Badge>
+        <Badge variant="secondary" className="text-sm">
+          ${metrics.totalRevenue.toLocaleString()} Monthly Revenue
+        </Badge>
+      </div>
+    </div>
+  </div>
 );
 
 // Enhanced Metrics Cards Component with Icons and Tooltips
 const MetricsCards: React.FC<{ metrics: ProcessedMetrics }> = ({ metrics }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg hover:shadow-xl transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-blue-700">Active Customers</p>
-            <p className="text-3xl font-bold text-blue-900">{metrics.activeCustomers}</p>
-            <div className="flex items-center text-xs text-blue-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>+12% vs last month</span>
-            </div>
-          </div>
-          <div className="p-4 bg-blue-200 rounded-xl">
-            <Users className="w-8 h-8 text-blue-700" />
-          </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-slate-700">Active Customers</CardTitle>
+        <Users className="h-5 w-5 text-blue-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-blue-900">{metrics.activeCustomers}</div>
+        <div className="flex items-center mt-1">
+          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+          <span className="text-xs text-green-600">+12% from last month</span>
         </div>
       </CardContent>
     </Card>
 
-    <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg hover:shadow-xl transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-green-700">Monthly Revenue</p>
-            <p className="text-3xl font-bold text-green-900">${metrics.totalRevenue.toLocaleString()}</p>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>+{metrics.efficiencyGain}% growth</span>
-            </div>
-          </div>
-          <div className="p-4 bg-green-200 rounded-xl">
-            <DollarSign className="w-8 h-8 text-green-700" />
-          </div>
+    <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-slate-700">Monthly Revenue</CardTitle>
+        <DollarSign className="h-5 w-5 text-green-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-green-900">
+          ${metrics.totalRevenue.toLocaleString()}
+        </div>
+        <div className="flex items-center mt-1">
+          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+          <span className="text-xs text-green-600">+{metrics.efficiencyGain}% growth</span>
         </div>
       </CardContent>
     </Card>
 
-    <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 shadow-lg hover:shadow-xl transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-orange-700">Avg Completion Time</p>
-            <p className="text-3xl font-bold text-orange-900">{metrics.avgCompletionTime.toFixed(1)}min</p>
-            <div className="flex items-center text-xs text-orange-600">
-              <TrendingDown className="w-3 h-3 mr-1" />
-              <span>-15% vs last month</span>
-            </div>
-          </div>
-          <div className="p-4 bg-orange-200 rounded-xl">
-            <Clock className="w-8 h-8 text-orange-700" />
-          </div>
+    <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-slate-700">Avg Completion Time</CardTitle>
+        <Clock className="h-5 w-5 text-yellow-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-yellow-900">
+          {metrics.avgCompletionTime.toFixed(1)}m
+        </div>
+        <div className="flex items-center mt-1">
+          <TrendingDown className="h-4 w-4 text-green-600 mr-1" />
+          <span className="text-xs text-green-600">-15% improvement</span>
         </div>
       </CardContent>
     </Card>
 
-    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-purple-700">Revenue/Minute</p>
-            <p className="text-3xl font-bold text-purple-900">${metrics.revenuePerMinute.toFixed(0)}</p>
-            <div className="flex items-center text-xs text-purple-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>Efficiency metric</span>
-            </div>
-          </div>
-          <div className="p-4 bg-purple-200 rounded-xl">
-            <Building className="w-8 h-8 text-purple-700" />
-          </div>
+    <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-slate-700">Revenue/Minute</CardTitle>
+        <TrendingUp className="h-5 w-5 text-purple-600" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-purple-900">
+          ${metrics.revenuePerMinute.toFixed(0)}
+        </div>
+        <div className="flex items-center mt-1">
+          <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+          <span className="text-xs text-green-600">Efficiency metric</span>
         </div>
       </CardContent>
     </Card>
@@ -259,27 +266,27 @@ const DashboardCharts: React.FC<{ chartData: ChartData }> = ({ chartData }) => {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+          <CardTitle className="flex items-center gap-2">
+            <BarChart className="h-5 w-5" />
             Revenue Trends by Service Type
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData.revenueTrends} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={chartData.revenueTrends}>
               <XAxis dataKey="month" />
               <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`} />
               <RechartsTooltip 
-                formatter={(value: number, name: string) => [`$${value.toLocaleString()}`, name]}
+                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
                 labelFormatter={(label) => `Month: ${label}`}
               />
               <Legend />
-              <Bar dataKey="HOA" stackId="a" fill={COLORS[0]} name="HOA Services" />
-              <Bar dataKey="Subscription" stackId="a" fill={COLORS[1]} name="Subscriptions" />
-              <Bar dataKey="Commercial" stackId="a" fill={COLORS[2]} name="Commercial" />
+              <Bar dataKey="HOA" fill={COLORS[0]} name="HOA Services" />
+              <Bar dataKey="Subscription" fill={COLORS[1]} name="Subscription Services" />
+              <Bar dataKey="Commercial" fill={COLORS[2]} name="Commercial Services" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -287,9 +294,9 @@ const DashboardCharts: React.FC<{ chartData: ChartData }> = ({ chartData }) => {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
-            <Eye className="w-5 h-5 mr-2 text-green-600" />
-            Service Efficiency Distribution
+          <CardTitle className="flex items-center gap-2">
+            <PieChart className="h-5 w-5" />
+            Service Type Distribution
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -309,7 +316,9 @@ const DashboardCharts: React.FC<{ chartData: ChartData }> = ({ chartData }) => {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <RechartsTooltip formatter={(value: number) => [`${value} customers`, 'Count']} />
+              <RechartsTooltip 
+                formatter={(value: number) => [`${value}`, 'Customers']}
+              />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -318,7 +327,7 @@ const DashboardCharts: React.FC<{ chartData: ChartData }> = ({ chartData }) => {
   );
 };
 
-// Enhanced Customer Table Component with Advanced Features
+// Enhanced Customer Table Component with Sort, Pagination, Search
 const CustomerTable: React.FC<{
   customers: Customer[];
   search: string;
@@ -331,159 +340,133 @@ const CustomerTable: React.FC<{
 }> = ({ customers, search, onSearchChange, currentPage, totalPages, onPageChange, totalCustomers, pageSize }) => {
   
   const getStatusBadge = (status: string) => {
-    const statusMap = {
-      'Serviced': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' },
-      'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300' },
-      'Cancelled': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300' }
-    };
-    
-    const styles = statusMap[status as keyof typeof statusMap] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' };
-    
-    return (
-      <Badge className={`${styles.bg} ${styles.text} ${styles.border} font-medium`}>
-        {status}
-      </Badge>
-    );
+    switch (status) {
+      case 'Serviced':
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+      case 'Pending':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   const getTypeBadge = (type: string) => {
-    const typeMap = {
-      'HOA': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
-      'Subscription': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' },
-      'Commercial': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' }
-    };
-    
-    const styles = typeMap[type as keyof typeof typeMap] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' };
-    
-    return (
-      <Badge className={`${styles.bg} ${styles.text} ${styles.border} font-medium`}>
-        {type}
-      </Badge>
-    );
+    switch (type) {
+      case 'HOA':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800">HOA</Badge>;
+      case 'Subscription':
+        return <Badge variant="default" className="bg-purple-100 text-purple-800">Subscription</Badge>;
+      case 'Commercial':
+        return <Badge variant="default" className="bg-orange-100 text-orange-800">Commercial</Badge>;
+      default:
+        return <Badge variant="outline">{type}</Badge>;
+    }
   };
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
-              <Building className="w-5 h-5 mr-2 text-blue-600" />
-              Customer Directory
-            </CardTitle>
-            <p className="text-sm text-slate-600 mt-1">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCustomers)} of {totalCustomers} customers
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-            <Button variant="outline" size="sm">
-              <ArrowUpDown className="w-4 h-4 mr-2" />
-              Sort
-            </Button>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Customer Operations
+          </CardTitle>
+          <div className="text-sm text-slate-500">
+            Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCustomers)} of {totalCustomers} customers
           </div>
         </div>
       </CardHeader>
-      
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="min-w-[200px] font-semibold">Customer Name</TableHead>
-                <TableHead className="min-w-[250px] font-semibold">Address</TableHead>
-                <TableHead className="min-w-[100px] font-semibold">Type</TableHead>
-                <TableHead className="min-w-[100px] font-semibold">Status</TableHead>
-                <TableHead className="min-w-[100px] font-semibold">Units</TableHead>
-                <TableHead className="min-w-[120px] font-semibold">Revenue</TableHead>
-                <TableHead className="min-w-[120px] font-semibold">Efficiency</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {customers.map((customer, index) => (
-                <TableRow key={index} className="hover:bg-slate-50 transition-colors">
-                  <TableCell className="font-medium">
-                    <div className="whitespace-normal break-words max-w-[200px]">
-                      {customer['HOA Name']}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="whitespace-normal break-words max-w-[250px] text-sm text-slate-600">
-                      {customer['Full Address']}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getTypeBadge(customer['Type'] || 'HOA')}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(customer['Service Status'])}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {customer['Number of Units'] || 'N/A'}
-                  </TableCell>
-                  <TableCell className="font-medium text-green-600">
-                    {customer['Monthly Revenue']}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <span className="text-orange-600">
-                      {customer['Average Completion Time in Minutes']}min
-                    </span>
-                  </TableCell>
+        <div className="space-y-4">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Customer Name</TableHead>
+                  <TableHead className="w-[250px]">Address</TableHead>
+                  <TableHead className="w-[100px]">Type</TableHead>
+                  <TableHead className="w-[100px]">Status</TableHead>
+                  <TableHead className="w-[100px]">Units</TableHead>
+                  <TableHead className="w-[120px]">Revenue</TableHead>
+                  <TableHead className="w-[100px]">Efficiency</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Enhanced Pagination */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-          <div className="text-sm text-slate-600">
-            Page {currentPage} of {totalPages} • {totalCustomers} total customers
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer, index) => (
+                  <TableRow key={index} className="hover:bg-slate-50">
+                    <TableCell className="font-medium whitespace-normal">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4 text-slate-400" />
+                        {customer['HOA Name']}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-slate-400" />
+                        {customer['Full Address']}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getTypeBadge(customer['Type'])}</TableCell>
+                    <TableCell>{getStatusBadge(customer['Service Status'])}</TableCell>
+                    <TableCell>{customer['Number of Units']}</TableCell>
+                    <TableCell className="font-medium">
+                      ${parseFloat(customer['Monthly Revenue']?.replace(/[$,]/g, '') || '0').toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-slate-400" />
+                        {customer['Average Completion Time in Minutes'] || '0'}m
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="flex items-center"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const page = i + 1;
-                return (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onPageChange(page)}
-                    className="w-8 h-8 p-0"
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onPageChange(page)}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="flex items-center"
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+            <div className="text-sm text-slate-500">
+              Page {currentPage} of {totalPages}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -491,28 +474,24 @@ const CustomerTable: React.FC<{
   );
 };
 
-// Enhanced Placeholder Tab Component
+// Placeholder Tab Component
 const PlaceholderTab: React.FC<{ 
   title: string; 
   description: string; 
   icon: React.ReactNode;
   comingSoonDate?: string;
 }> = ({ title, description, icon, comingSoonDate = "Q2 2024" }) => (
-  <Card className="w-full h-96 shadow-lg">
-    <CardContent className="flex flex-col items-center justify-center h-full text-center p-8">
-      <div className="mb-6 p-4 bg-slate-100 rounded-2xl">
-        {icon}
-      </div>
-      <h3 className="text-2xl font-bold text-slate-800 mb-4">{title}</h3>
-      <p className="text-slate-600 max-w-md mb-6 leading-relaxed">{description}</p>
-      <Badge variant="outline" className="text-sm">
-        Coming {comingSoonDate}
-      </Badge>
+  <Card className="shadow-lg">
+    <CardContent className="p-12 text-center">
+      <div className="mb-4">{icon}</div>
+      <h3 className="text-xl font-semibold text-slate-700 mb-2">{title}</h3>
+      <p className="text-slate-500 mb-4">{description}</p>
+      <Badge variant="outline">Coming Soon • {comingSoonDate}</Badge>
     </CardContent>
   </Card>
 );
 
-// Main Dashboard Component with Enhanced Data Processing
+// Main Dashboard Component
 export default function Dashboard() {
   const [customerData, setCustomerData] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -717,79 +696,87 @@ export default function Dashboard() {
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">No Data Available</h3>
-            <p className="text-slate-500">Please check your data source and try again.</p>
+            <p className="text-sm text-slate-500 mb-4">Unable to load customer data for analysis.</p>
+            <Button onClick={handleRefresh} className="w-full">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry Loading
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Main dashboard render
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900 p-6 space-y-6">
-        <DashboardHeader
-          search={search}
-          onSearchChange={handleSearchChange}
-          onRefresh={handleRefresh}
-          onExportCSV={handleExportCSV}
-          onSendAlert={handleSendAlert}
-          metrics={processedData.metrics}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <TooltipProvider>
+        <div className="p-6 space-y-6">
+          <DashboardHeader
+            search={search}
+            onSearchChange={handleSearchChange}
+            onRefresh={handleRefresh}
+            onExportCSV={handleExportCSV}
+            onSendAlert={handleSendAlert}
+            metrics={processedData.metrics}
+          />
 
-        <MetricsCards metrics={processedData.metrics} />
+          <MetricsCards metrics={processedData.metrics} />
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
-            <TabsTrigger value="overview" className="font-semibold">Executive Overview</TabsTrigger>
-            <TabsTrigger value="hoa" className="font-semibold">HOA Analysis</TabsTrigger>
-            <TabsTrigger value="subscriptions" className="font-semibold">Subscriptions</TabsTrigger>
-            <TabsTrigger value="profitability" className="font-semibold">Profitability</TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="customers">Customers</TabsTrigger>
+              <TabsTrigger value="reports">Reports</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <DashboardCharts chartData={processedData.chartData} />
-            
-            <CustomerTable
-              customers={processedData.paginatedData}
-              search={search}
-              onSearchChange={handleSearchChange}
-              currentPage={currentPage}
-              totalPages={processedData.totalPages}
-              onPageChange={handlePageChange}
-              totalCustomers={processedData.totalCustomers}
-              pageSize={pageSize}
-            />
-          </TabsContent>
+            <TabsContent value="overview" className="space-y-6">
+              <DashboardCharts chartData={processedData.chartData} />
+              <CustomerTable
+                customers={processedData.paginatedData}
+                search={search}
+                onSearchChange={handleSearchChange}
+                currentPage={currentPage}
+                totalPages={processedData.totalPages}
+                onPageChange={handlePageChange}
+                totalCustomers={processedData.totalCustomers}
+                pageSize={pageSize}
+              />
+            </TabsContent>
 
-          <TabsContent value="hoa">
-            <PlaceholderTab
-              title="HOA Cluster Analysis"
-              description="Advanced analytics for HOA service optimization, route planning, and cluster performance metrics with geographical insights."
-              icon={<Building className="w-16 h-16 text-blue-500" />}
-              comingSoonDate="Q2 2024"
-            />
-          </TabsContent>
+            <TabsContent value="analytics">
+              <PlaceholderTab
+                title="Advanced Analytics"
+                description="Detailed analytics and performance insights"
+                icon={<TrendingUp className="h-12 w-12 text-slate-400" />}
+                comingSoonDate="Q2 2024"
+              />
+            </TabsContent>
 
-          <TabsContent value="subscriptions">
-            <PlaceholderTab
-              title="Subscription Services"
-              description="Comprehensive subscription analytics including churn analysis, retention metrics, and recurring revenue optimization."
-              icon={<Users className="w-16 h-16 text-green-500" />}
-              comingSoonDate="Q3 2024"
-            />
-          </TabsContent>
+            <TabsContent value="customers">
+              <CustomerTable
+                customers={processedData.paginatedData}
+                search={search}
+                onSearchChange={handleSearchChange}
+                currentPage={currentPage}
+                totalPages={processedData.totalPages}
+                onPageChange={handlePageChange}
+                totalCustomers={processedData.totalCustomers}
+                pageSize={pageSize}
+              />
+            </TabsContent>
 
-          <TabsContent value="profitability">
-            <PlaceholderTab
-              title="Profitability Intelligence"
-              description="Advanced financial analytics with margin analysis, cost optimization recommendations, and predictive profitability modeling."
-              icon={<TrendingUp className="w-16 h-16 text-purple-500" />}
-              comingSoonDate="Q4 2024"
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </TooltipProvider>
+            <TabsContent value="reports">
+              <PlaceholderTab
+                title="Executive Reports"
+                description="Comprehensive reporting and data export tools"
+                icon={<FileText className="h-12 w-12 text-slate-400" />}
+                comingSoonDate="Q2 2024"
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </TooltipProvider>
+    </div>
   );
 } 
