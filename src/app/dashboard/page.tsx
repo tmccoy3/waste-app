@@ -8,8 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ArrowUp, ArrowUpDown, RefreshCw, FileText, Send, AlertCircle } from 'lucide-react';
-// Static import for better reliability
-import customersData from '@/data/geocoded_customers.json';
 
 interface Customer {
   'HOA Name': string;
@@ -34,23 +32,61 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      // Use static import data directly
-      const customers = customersData as Customer[];
-      
-      // Set Service Status based on existing data structure
-      const processedCustomers = customers.map(customer => ({
-        ...customer,
-        'Service Status': customer['Service Status'] || 'Serviced' // Default to Serviced if not specified
-      }));
-      
-      setData(processedCustomers);
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Failed to load data:', err);
-      setError('Failed to load customer data');
-      setIsLoading(false);
-    }
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // Fetch data from the API endpoint
+        const response = await fetch('/api/customers');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        const customers = await response.json();
+        
+        // Ensure it's an array
+        if (!Array.isArray(customers)) {
+          throw new Error('Invalid data format - expected array');
+        }
+        
+        // Set Service Status based on existing data structure
+        const processedCustomers = customers.map(customer => ({
+          ...customer,
+          'Service Status': customer['Service Status'] || 'Serviced'
+        }));
+        
+        setData(processedCustomers);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        setError('Failed to load customer data. Please check if the data file exists.');
+        // Set some dummy data for development
+        setData([
+          {
+            'HOA Name': 'Sample HOA 1',
+            'Monthly Revenue': '$5,000',
+            'Full Address': '123 Main St, City, State 12345',
+            'Average Completion Time in Minutes': '25',
+            'Service Status': 'Serviced',
+            'Unit Type': 'Townhomes',
+            'Type': 'HOA',
+            'Number of Units': '100'
+          },
+          {
+            'HOA Name': 'Sample HOA 2', 
+            'Monthly Revenue': '$3,500',
+            'Full Address': '456 Oak Ave, City, State 12345',
+            'Average Completion Time in Minutes': '30',
+            'Service Status': 'Serviced',
+            'Unit Type': 'Condos',
+            'Type': 'HOA',
+            'Number of Units': '75'
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
   const filteredData = useMemo(() => 
@@ -112,9 +148,8 @@ export default function Dashboard() {
 
   const handleRefresh = () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    // Trigger useEffect to reload data
+    window.location.reload();
   };
 
   const handleSort = (column: string) => {
@@ -149,14 +184,16 @@ export default function Dashboard() {
   };
 
   if (isLoading) return (
-    <div className="flex items-center justify-center h-screen">
-      <RefreshCw className="h-8 w-8 animate-spin mr-2" />
-      Loading dashboard...
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="text-center">
+        <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <p className="text-gray-600">Loading dashboard...</p>
+      </div>
     </div>
   );
 
   if (error) return (
-    <div className="flex flex-col items-center justify-center h-screen gap-4">
+    <div className="flex flex-col items-center justify-center h-screen gap-4 bg-gray-50">
       <AlertCircle className="h-8 w-8 text-red-500" />
       <p className="text-red-500">{error}</p>
       <Button onClick={handleRefresh} variant="outline">
