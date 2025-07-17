@@ -134,7 +134,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError,
                 {error.stack && (
                   <div>
                     <strong>Stack:</strong>
-                    <pre className="mt-1 text-xs overflow-x-auto bg-white p-2 rounded border">
+                    <pre className="mt-1 text-xs overflow-x-auto bg-[#ffffff] p-2 rounded border">
                       {error.stack}
                     </pre>
                   </div>
@@ -142,7 +142,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError,
                 {errorInfo && (
                   <div>
                     <strong>Component Stack:</strong>
-                    <pre className="mt-1 text-xs overflow-x-auto bg-white p-2 rounded border">
+                    <pre className="mt-1 text-xs overflow-x-auto bg-[#ffffff] p-2 rounded border">
                       {errorInfo.componentStack}
                     </pre>
                   </div>

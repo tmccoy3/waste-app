@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { CustomerData } from '../app/api/customers/route'
+import { CustomerData } from '../lib/api/google-sheets-customers'
 
 // Utility functions
 const getMarkerColor = (type: 'HOA' | 'Subscription') => {
@@ -40,8 +40,8 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
   // Sort customers by revenue efficiency (revenue per minute)
   const sortedCustomers = useMemo(() => {
     return [...filteredCustomers].sort((a, b) => {
-      const efficiencyA = a.monthlyRevenue / a.completionTime
-      const efficiencyB = b.monthlyRevenue / b.completionTime
+      const efficiencyA = a.monthlyRevenue / (a.completionTime || 1)
+      const efficiencyB = b.monthlyRevenue / (b.completionTime || 1)
       return efficiencyB - efficiencyA
     })
   }, [filteredCustomers])
@@ -49,7 +49,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
   // Calculate summary metrics
   const metrics = useMemo(() => {
     const totalRevenue = filteredCustomers.reduce((sum, c) => sum + c.monthlyRevenue, 0)
-    const totalTime = filteredCustomers.reduce((sum, c) => sum + c.completionTime, 0)
+    const totalTime = filteredCustomers.reduce((sum, c) => sum + (c.completionTime || 0), 0)
     const avgTime = filteredCustomers.length > 0 ? totalTime / filteredCustomers.length : 0
     const avgEfficiency = filteredCustomers.length > 0 ? totalRevenue / totalTime : 0
     
@@ -63,8 +63,8 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
 
   // Get efficiency percentile for heatmap coloring
   const getEfficiencyPercentile = (customer: CustomerData) => {
-    const efficiency = customer.monthlyRevenue / customer.completionTime
-    const allEfficiencies = sortedCustomers.map(c => c.monthlyRevenue / c.completionTime)
+    const efficiency = customer.monthlyRevenue / (customer.completionTime || 1)
+    const allEfficiencies = sortedCustomers.map(c => c.monthlyRevenue / (c.completionTime || 1))
     const percentile = (allEfficiencies.indexOf(efficiency) / allEfficiencies.length) * 100
     return percentile
   }
@@ -157,7 +157,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
           <div className="metric-value">{metrics.avgTime} min</div>
           <div className="metric-label">Avg Time on Site</div>
           <div className="metric-change">
-            <span className="metric-range">Range: {Math.min(...filteredCustomers.map(c => c.completionTime))}-{Math.max(...filteredCustomers.map(c => c.completionTime))} min</span>
+            <span className="metric-range">Range: {Math.min(...filteredCustomers.map(c => c.completionTime || 0))}-{Math.max(...filteredCustomers.map(c => c.completionTime || 0))} min</span>
           </div>
         </div>
         
@@ -209,7 +209,7 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
             </thead>
             <tbody>
               {sortedCustomers.map((customer) => {
-                const efficiency = customer.monthlyRevenue / customer.completionTime
+                const efficiency = customer.monthlyRevenue / (customer.completionTime || 1)
                 return (
                   <tr 
                     key={customer.id} 
@@ -228,8 +228,8 @@ export default function CustomerMapFallback({ customers, onRefresh, lastUpdated 
                       </div>
                     </td>
                     <td className="col-address">
-                      <span className="address-text" title={customer.address}>
-                        {truncateAddress(customer.address)}
+                      <span className="address-text" title={customer.address || ''}>
+                        {truncateAddress(customer.address || '')}
                       </span>
                     </td>
                     <td className="col-revenue">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { CustomerData } from '../app/api/customers/route'
+import { CustomerData } from '../lib/api/google-sheets-customers'
 import OperationsDashboard from './OperationsDashboard'
 
 interface ExecutiveDashboardTopProps {
@@ -57,14 +57,14 @@ export default function ExecutiveDashboardTop({ customers, lastUpdated }: Execut
 
     // Average profit per minute across all customers
     const totalRevenuePerMinute = customers.reduce((sum, customer) => {
-      return sum + (customer.monthlyRevenue / customer.completionTime)
+      return sum + (customer.monthlyRevenue / (customer.completionTime || 1))
     }, 0)
     const avgProfitPerMinute = totalRevenuePerMinute / customers.length
 
     // Most profitable HOA
     const mostProfitableHOA = hoaCustomers.reduce((best, current) => {
-      const currentRevenuePerMinute = current.monthlyRevenue / current.completionTime
-      const bestRevenuePerMinute = best ? (best.monthlyRevenue / best.completionTime) : 0
+      const currentRevenuePerMinute = current.monthlyRevenue / (current.completionTime || 1)
+      const bestRevenuePerMinute = best ? (best.monthlyRevenue / (best.completionTime || 1)) : 0
       
       return currentRevenuePerMinute > bestRevenuePerMinute ? current : best
     }, null as CustomerData | null)

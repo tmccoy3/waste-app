@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, Search, Filter, Users, DollarSign, Clock, TrendingUp } from 'lucide-react'
-import { CustomerData } from '../app/api/customers/route'
+import { CustomerData } from '../lib/api/google-sheets-customers'
+import ChatMessageSender from './ChatMessageSender'
 
 interface ExecutiveCustomerDashboardProps {
   customers: CustomerData[]
@@ -22,10 +23,11 @@ export default function ExecutiveCustomerDashboard({
 }: ExecutiveCustomerDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<'all' | 'hoa' | 'subscription'>('all')
+  const [showChatSender, setShowChatSender] = useState(false)
 
   const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         customer.address.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = (customer.name || customer.communityName).toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (customer.address || '').toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter = activeFilter === 'all' || customer.type.toLowerCase() === activeFilter
     return matchesSearch && matchesFilter
   })
@@ -37,12 +39,27 @@ export default function ExecutiveCustomerDashboard({
     }).format(amount)
   }
 
+  // Calculate profitability color based on revenue per minute
+  const getProfitabilityColor = (customer: CustomerData) => {
+    const revenuePerMinute = customer.monthlyRevenue / (customer.completionTime || 1)
+    if (revenuePerMinute >= 75) return 'bg-green-100 text-green-800 border-green-300'
+    if (revenuePerMinute >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+    return 'bg-red-100 text-red-800 border-red-300'
+  }
+
+  const getProfitabilityLabel = (customer: CustomerData) => {
+    const revenuePerMinute = customer.monthlyRevenue / (customer.completionTime || 1)
+    if (revenuePerMinute >= 75) return 'High'
+    if (revenuePerMinute >= 50) return 'Medium'
+    return 'Low'
+  }
+
   const hoaCustomers = customers.filter(c => c.type === 'HOA')
   const subscriptionCustomers = customers.filter(c => c.type === 'Subscription')
 
   const totalRevenue = customers.reduce((sum, c) => sum + c.monthlyRevenue, 0)
   const avgCompletionTime = customers.length > 0 
-    ? customers.reduce((sum, c) => sum + c.completionTime, 0) / customers.length 
+    ? customers.reduce((sum, c) => sum + (c.completionTime || 0), 0) / customers.length 
     : 0
 
   return (
@@ -74,30 +91,42 @@ export default function ExecutiveCustomerDashboard({
                 <p className="text-sm text-slate-600">Send instant notifications to your team&apos;s Google Chat space</p>
               </div>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setShowChatSender(true)}
+            >
               Send Alert
             </Button>
           </div>
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
+            <div className="flex items-center space-x-2 p-3 bg-[#ffffff] rounded-lg border">
               <span className="text-lg">🚛</span>
               <span className="text-sm text-slate-700">Missed Pick-ups</span>
             </div>
-            <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
+            <div className="flex items-center space-x-2 p-3 bg-[#ffffff] rounded-lg border">
               <span className="text-lg">🗓️</span>
               <span className="text-sm text-slate-700">Meetings</span>
             </div>
-            <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
+            <div className="flex items-center space-x-2 p-3 bg-[#ffffff] rounded-lg border">
               <span className="text-lg">🧑‍💼</span>
               <span className="text-sm text-slate-700">Property Manager Updates</span>
             </div>
-            <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
+            <div className="flex items-center space-x-2 p-3 bg-[#ffffff] rounded-lg border">
               <span className="text-lg">📢</span>
               <span className="text-sm text-slate-700">General Announcements</span>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Chat Message Sender Modal */}
+      {showChatSender && (
+        <div className="fixed inset-0 bg-[#000000] bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#ffffff] rounded-lg p-6 max-w-md w-full mx-4">
+            <ChatMessageSender onClose={() => setShowChatSender(false)} />
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <Card>
@@ -118,31 +147,28 @@ export default function ExecutiveCustomerDashboard({
                 size="sm"
                 onClick={() => setActiveFilter('all')}
               >
-                All Customers
-                <Badge variant="secondary" className="ml-2">{customers.length}</Badge>
+                All
               </Button>
               <Button
                 variant={activeFilter === 'hoa' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveFilter('hoa')}
               >
-                HOA Clusters
-                <Badge variant="secondary" className="ml-2">{hoaCustomers.length}</Badge>
+                HOA
               </Button>
               <Button
                 variant={activeFilter === 'subscription' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveFilter('subscription')}
               >
-                Subscriptions
-                <Badge variant="secondary" className="ml-2">{subscriptionCustomers.length}</Badge>
+                Subscription
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* KPI Cards */}
+      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -170,9 +196,9 @@ export default function ExecutiveCustomerDashboard({
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Completion Time</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Average Completion Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -237,12 +263,19 @@ export default function ExecutiveCustomerDashboard({
                         <h4 className="font-medium text-slate-900 truncate">{customer.name}</h4>
                         <p className="text-sm text-slate-500 truncate">{customer.address}</p>
                       </div>
-                      <Badge 
-                        variant={customer.type === 'HOA' ? 'default' : 'secondary'}
-                        className="ml-2 flex-shrink-0"
-                      >
-                        {customer.type}
-                      </Badge>
+                      <div className="flex flex-col items-end space-y-1">
+                        <Badge 
+                          variant={customer.type === 'HOA' ? 'default' : 'secondary'}
+                          className="ml-2 flex-shrink-0"
+                        >
+                          {customer.type}
+                        </Badge>
+                        <Badge 
+                          className={`ml-2 flex-shrink-0 ${getProfitabilityColor(customer)}`}
+                        >
+                          {getProfitabilityLabel(customer)}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
@@ -260,7 +293,7 @@ export default function ExecutiveCustomerDashboard({
                       <div>
                         <span className="text-slate-500">Efficiency:</span>
                         <div className="font-medium">
-                          {formatCurrency(customer.monthlyRevenue / customer.completionTime)}/min
+                          {formatCurrency(customer.monthlyRevenue / (customer.completionTime || 1))}/min
                         </div>
                       </div>
                     </div>

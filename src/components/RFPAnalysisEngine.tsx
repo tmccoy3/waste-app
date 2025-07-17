@@ -69,7 +69,7 @@ const LORTON_LANDFILL = { lat: 38.691352122449000, lng: -77.2377658367347 };
 
 // Enhanced Card components with better styling
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 ${className}`}>
+        <div className={`bg-[#ffffff] rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 ${className}`}>
     {children}
   </div>
 );

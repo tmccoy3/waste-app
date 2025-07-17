@@ -187,7 +187,7 @@ const CustomerTable: React.FC<CustomerTableProps> = React.memo(({
   }, [currentPage, pageSize, totalCustomers]);
 
   return (
-    <Card className="bg-white shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200">
+              <Card className="bg-[#ffffff] shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200">
       <CardHeader>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>

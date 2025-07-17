@@ -1,0 +1,338 @@
+
+> waste-ops-intelligence@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.3 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.162:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 707ms
+ ○ Compiling /dashboard/serviceability-check ...
+ ✓ Compiled /dashboard/serviceability-check in 2.4s
+ HEAD /dashboard/serviceability-check 200 in 2579ms
+ GET /dashboard/serviceability-check 200 in 77ms
+ ✓ Compiled /favicon.ico in 202ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 438ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 228ms
+ ✓ Compiled /api/comprehensive-rfp-analysis in 188ms
+🚀 Starting comprehensive RFP analysis API...
+🔍 Comprehensive analysis:  - undefined homes
+📍 Location: 1771
+🗑️ Service: 2x trash, 1x recycling, 1x yard waste
+📊 Loaded 181 total customers, filtered to 63 HOA customers for analysis
+👥 Analyzing against 63 existing HOA customers
+🔍 Starting comprehensive analysis for  (undefined homes)
+🚛 Analyzing fleet requirements...
+🗺️ Calculating route distance and costs...
+🔍 Finding closest customer to new location among 63 customers
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 1771 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+👥 Finding similar customers...
+💰 Calculating tiered pricing...
+📊 Generating final recommendation...
+✅ Analysis complete: DO NOT BID
+📊 Serviceability Score: 30/100
+💰 Estimated Price: $23.78/home/month
+🚛 Fleet Load: NaN%
+ POST /api/comprehensive-rfp-analysis 200 in 2141ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 74ms
+ GET /dashboard/serviceability-check 200 in 184ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 228ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 218ms
+ HEAD /dashboard/serviceability-check 200 in 55ms
+ ✓ Compiled /dashboard in 468ms
+prisma:query SELECT AVG("avgCompletionTime"), AVG("monthlyRevenue"), COUNT("id") FROM (SELECT "public"."customers"."avgCompletionTime", "public"."customers"."monthlyRevenue", "public"."customers"."id" FROM "public"."customers" WHERE 1=1 OFFSET $1) AS "sub"
+prisma:query SELECT "public"."customers"."id", "public"."customers"."hoaName", "public"."customers"."fullAddress", "public"."customers"."monthlyRevenue", "public"."customers"."avgCompletionTime", "public"."customers"."serviceStatus"::text, "public"."customers"."createdAt", "public"."customers"."latitude", "public"."customers"."longitude", "public"."customers"."city", "public"."customers"."state", "public"."customers"."zipCode" FROM "public"."customers" WHERE 1=1 ORDER BY "public"."customers"."createdAt" DESC LIMIT $1 OFFSET $2
+ HEAD /dashboard 200 in 566ms
+ GET /dashboard/serviceability-check 200 in 76ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 225ms
+ GET /dashboard/serviceability-check 200 in 74ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 217ms
+🚀 Starting comprehensive RFP analysis API...
+🔍 Comprehensive analysis:  - undefined homes
+📍 Location: 155
+🗑️ Service: 2x trash, 1x recycling, 1x yard waste
+📊 Loaded 181 total customers, filtered to 63 HOA customers for analysis
+👥 Analyzing against 63 existing HOA customers
+🔍 Starting comprehensive analysis for  (undefined homes)
+🚛 Analyzing fleet requirements...
+🗺️ Calculating route distance and costs...
+🔍 Finding closest customer to new location among 63 customers
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+🗺️ Calculating route: 155 → undefined,undefined
+❌ Route calculation error: Error: Google Maps API error: REQUEST_DENIED
+    at calculateRouteDistance (src/lib/api/google-maps.ts:74:12)
+    at async findClosestCustomer (src/lib/api/google-maps.ts:143:20)
+    at async performComprehensiveRFPAnalysis (src/lib/comprehensive-rfp-analysis.ts:331:26)
+    at async POST (src/app/api/comprehensive-rfp-analysis/route.ts:120:19)
+  72 |
+  73 |     if (data.status !== 'OK') {
+> 74 |       throw new Error(`Google Maps API error: ${data.status}`);
+     |            ^
+  75 |     }
+  76 |
+  77 |     const element = data.rows[0]?.elements[0];
+👥 Finding similar customers...
+💰 Calculating tiered pricing...
+📊 Generating final recommendation...
+✅ Analysis complete: DO NOT BID
+📊 Serviceability Score: 30/100
+💰 Estimated Price: $23.78/home/month
+🚛 Fleet Load: NaN%
+ POST /api/comprehensive-rfp-analysis 200 in 1657ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 635ms
+ GET /dashboard/serviceability-check 200 in 140ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 231ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 217ms
+ ✓ Compiled in 48ms
+[?25h

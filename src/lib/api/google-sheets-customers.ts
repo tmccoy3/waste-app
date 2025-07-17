@@ -3,11 +3,19 @@
 export interface CustomerData {
   id: string
   communityName: string
+  name?: string
+  address?: string
   latitude: number
   longitude: number
   type: 'HOA' | 'Subscription'
   timeOnSite: number // minutes
   monthlyRevenue: number
+  completionTime?: number // minutes
+  units?: number
+  unitType?: 'Townhome' | 'Condo' | 'Single Family'
+  trashDays?: string[]
+  recyclingDays?: string[]
+  yardWasteDays?: string[]
 }
 
 export interface GoogleSheetsCustomerResponse {

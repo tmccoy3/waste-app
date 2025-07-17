@@ -34,12 +34,41 @@ WasteOps Intelligence is a comprehensive waste management operations platform bu
 - **Maps**: Google Maps API integration
 - **Notifications**: Google Chat webhook integration
 
+## 🔗 Integrations
+
+The platform integrates with multiple third-party services to provide comprehensive business intelligence and operational data synchronization:
+
+### FreshBooks Integration
+- **Purpose**: Accounts Receivable/Payable management
+- **Data Sync**: Invoice records, payment status, customer billing
+- **Required Variables**: `FRESHBOOKS_API_TOKEN`, `FRESHBOOKS_ACCOUNT_ID`
+- **API Endpoint**: `https://api.freshbooks.com/accounting/account/{account_id}/invoices`
+
+### Stripe Integration
+- **Purpose**: Payment processing and transaction management
+- **Data Sync**: Payment charges, transaction history, payment methods
+- **Required Variables**: `STRIPE_SECRET_KEY`
+- **Features**: Automatic amount conversion (cents to dollars), payment status tracking
+
+### Timeero Integration
+- **Purpose**: Time tracking and employee management
+- **Data Sync**: Employee timesheets, clock-in/out records, work duration
+- **Required Variables**: `TIMEERO_API_KEY`
+- **API Endpoint**: `https://api.timeero.app/api/public/timesheets`
+
+### G-Suite (Google Sheets) Integration
+- **Purpose**: Spreadsheet data import and reporting
+- **Data Sync**: Sheet data, automated report generation
+- **Required Variables**: `GOOGLE_SERVICE_KEY_JSON`, `GOOGLE_SHEET_ID`
+- **Features**: Service account authentication, read-only access, JSON data storage
+
 ## 📋 Prerequisites
 
 - Node.js 18+ and npm
 - PostgreSQL database
 - Google Maps API key
 - Google Chat webhook (optional)
+- Integration service accounts (FreshBooks, Stripe, Timeero, Google)
 
 ## 🚀 Quick Start
 
@@ -55,13 +84,125 @@ npm install
 cp .env.example .env.local
 ```
 
-Configure your environment variables:
+## 🔧 Environment Variables
+
+Configure your environment variables in `.env.local`:
+
+### Database Configuration
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/wasteops"
+```
+
+### Authentication & Security
+```env
+NEXTAUTH_SECRET="your-nextauth-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### Google Services
+```env
 GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
 GOOGLE_CHAT_WEBHOOK_URL="your-google-chat-webhook-url"
-NEXTAUTH_SECRET="your-nextauth-secret"
+GOOGLE_SERVICE_KEY_JSON='{"type": "service_account", "project_id": "your-project", ...}'
+GOOGLE_SHEET_ID="your-google-sheet-id"
 ```
+
+### FreshBooks Integration
+```env
+FRESHBOOKS_API_TOKEN="your-freshbooks-api-token"
+FRESHBOOKS_ACCOUNT_ID="your-freshbooks-account-id"
+```
+
+### Stripe Integration
+```env
+STRIPE_SECRET_KEY="sk_test_your-stripe-secret-key"
+```
+
+### Timeero Integration
+```env
+TIMEERO_API_KEY="your-timeero-api-key"
+```
+
+### Optional Development Variables
+```env
+NODE_ENV="development"
+PRISMA_CLIENT_ENGINE_TYPE="binary"
+```
+
+## 🔄 Running Syncs
+
+The platform includes a comprehensive data synchronization service that integrates with multiple external APIs to keep your data current.
+
+### Basic Usage
+
+```typescript
+import { DataSyncService } from '@/lib/services/data-sync';
+
+// Initialize the service
+const syncService = new DataSyncService();
+
+// Sync all integrations
+await syncService.syncFreshBooks();
+await syncService.syncStripe();
+await syncService.syncTimeero();
+await syncService.syncGoogleSheets();
+```
+
+### FreshBooks Sync
+```typescript
+// Sync invoice data from FreshBooks
+await syncService.syncFreshBooks();
+
+// This will:
+// - Fetch invoices from FreshBooks API
+// - Validate API response data
+// - Upsert invoice records in database
+// - Handle amount/status conversions
+```
+
+### Stripe Sync
+```typescript
+// Sync payment data from Stripe
+await syncService.syncStripe();
+
+// This will:
+// - Fetch charges from Stripe API
+// - Convert amounts from cents to dollars
+// - Upsert payment records with Stripe IDs
+// - Link payments to invoice records
+```
+
+### Timeero Sync
+```typescript
+// Sync time tracking data from Timeero
+await syncService.syncTimeero();
+
+// This will:
+// - Fetch timesheet data with date ranges
+// - Calculate work durations
+// - Upsert time entry records
+// - Handle nullable end_time values
+```
+
+### Google Sheets Sync
+```typescript
+// Sync spreadsheet data from Google Sheets
+await syncService.syncGoogleSheets();
+
+// This will:
+// - Authenticate with Google Service Account
+// - Read sheet data from A1:Z range
+// - Store data as JSON in reports table
+// - Handle authentication and permissions
+```
+
+### Error Handling
+All sync methods include comprehensive error handling:
+- Environment variable validation
+- API authentication verification
+- Network error recovery
+- Data validation with Zod schemas
+- Detailed error logging
 
 ### 3. Database Setup
 ```bash
@@ -114,10 +255,52 @@ npm run lint:fix       # Fix linting issues
 ```
 
 ### Testing
+
+The platform includes a comprehensive test suite using Jest with TypeScript support and extensive mocking capabilities.
+
+#### Running Tests
 ```bash
-npm run test           # Run test suite
+npm test               # Run all tests
 npm run test:watch     # Watch mode testing
+npm run test:coverage  # Generate coverage report
 ```
+
+#### Test Structure
+```
+tests/
+├── setup.ts           # Test configuration and mocks
+├── data-sync.test.ts  # DataSyncService integration tests
+└── __mocks__/         # Mock modules
+```
+
+#### Test Features
+- **Isolated Testing**: Mocked APIs and database calls
+- **Environment Validation**: Tests for missing credentials
+- **Error Handling**: Comprehensive error path testing
+- **Integration Testing**: Full sync workflow validation
+
+#### Writing Tests
+```typescript
+// Example test structure
+describe('DataSyncService', () => {
+  let service: DataSyncService;
+  
+  beforeEach(() => {
+    service = new DataSyncService();
+    // Setup mocks and environment
+  });
+  
+  it('should sync data successfully', async () => {
+    // Test implementation
+  });
+});
+```
+
+#### Test Configuration
+- **Framework**: Jest with ts-jest preset
+- **Mocking**: jest-mock-extended for deep mocking
+- **Environment**: Node.js test environment
+- **Coverage**: Automatic coverage reporting
 
 ### Database Management
 ```bash
@@ -125,6 +308,62 @@ npx prisma studio      # Database GUI
 npx prisma migrate dev # Create new migration
 npx prisma db seed     # Seed database
 ```
+
+## 📊 Audit Notes
+
+### Performance Optimizations
+
+#### Database Efficiency
+- **Batch Upserts**: All sync operations use upsert patterns for optimal performance
+- **Transaction Wrapping**: Database operations wrapped in transactions for consistency
+- **Indexed Lookups**: Foreign key relationships optimized with proper indexing
+- **Connection Pooling**: Prisma connection pooling for concurrent operations
+
+#### API Integration Efficiency
+- **Zod Validation**: Runtime type checking with minimal overhead
+- **Error Boundaries**: Graceful degradation for API failures
+- **Retry Logic**: Exponential backoff for transient failures (TODO: implement)
+- **Rate Limiting**: Respect for API rate limits and quotas
+
+### Scalability Considerations
+
+#### Data Volume Handling
+- **Pagination Support**: Ready for large dataset pagination (TODO: implement)
+- **Incremental Sync**: Delta sync capabilities for large datasets
+- **Parallel Processing**: Multiple sync operations can run concurrently
+- **Memory Management**: Efficient memory usage for large API responses
+
+#### Performance Monitoring
+- **Execution Time Tracking**: Built-in performance monitoring
+- **Error Rate Monitoring**: Comprehensive error logging and tracking
+- **Resource Utilization**: Database connection and API call monitoring
+- **Alerting Integration**: Google Chat notifications for sync failures
+
+### Recommended Improvements
+
+#### Short-term Enhancements
+- **Pagination Implementation**: Add pagination for large API responses
+- **Retry Logic**: Implement exponential backoff for failed requests
+- **Caching Layer**: Add Redis caching for frequently accessed data
+- **Webhook Integration**: Real-time sync triggers instead of polling
+
+#### Long-term Scalability
+- **Queue System**: Implement job queues for background processing
+- **Microservices**: Break sync service into independent microservices
+- **Event-driven Architecture**: Move to event-driven sync patterns
+- **Data Streaming**: Real-time data streaming for high-frequency updates
+
+#### Security Enhancements
+- **Secret Rotation**: Automated API key rotation
+- **Audit Logging**: Comprehensive audit trail for all sync operations
+- **Access Control**: Fine-grained permissions for sync operations
+- **Encryption**: End-to-end encryption for sensitive data
+
+#### Monitoring & Observability
+- **Metrics Dashboard**: Real-time sync performance monitoring
+- **Health Checks**: Automated health monitoring for all integrations
+- **SLA Monitoring**: Service level agreement tracking
+- **Performance Alerting**: Proactive alerts for performance degradation
 
 ## 🔐 Security Features
 

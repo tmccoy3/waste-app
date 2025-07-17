@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { performComprehensiveRFPAnalysis, quickRFPAnalysis } from '../../../lib/comprehensive-rfp-analysis';
+import { analyzeProfitability, generateProfitabilityExplanation } from '../../../lib/customer-clustering-analysis';
 import fs from 'fs';
 import path from 'path';
 
@@ -72,12 +73,71 @@ export async function POST(req: NextRequest) {
       lat,
       lng,
       accessType = 'curbside',
-      specialInstructions = []
+      specialInstructions = [],
+      analysisType = 'comprehensive',
+      coordinates
     } = body;
     
     console.log(`🔍 Comprehensive analysis: ${communityName} - ${homes} homes`);
     console.log(`📍 Location: ${address}${lat && lng ? ` (${lat}, ${lng})` : ''}`);
     console.log(`🗑️ Service: ${trashFrequency}x trash, ${recyclingFrequency}x recycling, ${yardwasteFrequency}x yard waste`);
+    
+    // Check if this is a serviceability check with profitability analysis
+    if (analysisType === 'serviceability' && coordinates && coordinates.lat && coordinates.lng) {
+      console.log('🎯 Performing serviceability check with profitability analysis');
+      
+      try {
+        // Perform profitability analysis
+        const profitabilityAnalysis = await analyzeProfitability(
+          coordinates.lat,
+          coordinates.lng,
+          address
+        );
+        
+        // Generate explanation
+        const explanation = generateProfitabilityExplanation(profitabilityAnalysis);
+        
+        // Map to serviceability response format
+        const serviceabilityResult = {
+          customerProbability: profitabilityAnalysis.score,
+          profitMargin: profitabilityAnalysis.score > 70 ? 35 : profitabilityAnalysis.score > 40 ? 25 : 15,
+          recommendedAction: profitabilityAnalysis.marginLevel === 'HIGH' ? 'BID' : 
+                            profitabilityAnalysis.marginLevel === 'MEDIUM' ? 'BID-WITH-CONDITIONS' : 'DO-NOT-BID',
+          fleetImpact: {
+            utilization: Math.min(95, 75 + (profitabilityAnalysis.metrics.nearestCustomerDistance * 2)),
+            additionalRoute: profitabilityAnalysis.metrics.nearestCustomerDistance > 10,
+            estimatedDistance: profitabilityAnalysis.metrics.nearestCustomerDistance,
+            estimatedTime: Math.round(profitabilityAnalysis.metrics.nearestCustomerDistance * 2.5)
+          },
+          riskFactors: profitabilityAnalysis.reasoning.filter(r => 
+            r.includes('Far') || r.includes('Low') || r.includes('isolated') || r.includes('high')
+          ),
+          recommendations: [
+            `${profitabilityAnalysis.marginLevel.toLowerCase()} margin customer opportunity`,
+            explanation,
+            `Nearest customer: ${profitabilityAnalysis.metrics.nearestCustomerDistance.toFixed(1)} miles`,
+            `Customer density score: ${profitabilityAnalysis.metrics.customerDensity.toFixed(1)}`,
+            `Landfill distance: ${profitabilityAnalysis.metrics.nearestLandfillDistance.toFixed(1)} miles`
+          ],
+          confidenceLevel: profitabilityAnalysis.score > 70 ? 90 : profitabilityAnalysis.score > 40 ? 70 : 50,
+          profitabilityAnalysis: profitabilityAnalysis
+        };
+        
+        console.log(`✅ Serviceability analysis complete: ${serviceabilityResult.recommendedAction}`);
+        
+        return NextResponse.json(serviceabilityResult);
+        
+      } catch (error) {
+        console.error('❌ Profitability analysis error:', error);
+        return NextResponse.json(
+          { 
+            error: 'Failed to perform profitability analysis',
+            details: error instanceof Error ? error.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
+    }
     
     // Load existing customer data
     const customers = await loadCustomerData();

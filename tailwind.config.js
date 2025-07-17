@@ -1,20 +1,42 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   safelist: [
-    'bg-white',
-    'bg-slate-50',
+    'bg-black', 
+    'bg-blue-100',
     'bg-gray-50',
     'bg-gray-100',
+    'bg-gray-200',
+    'bg-yellow-200',
+    'bg-green-100',
+    'bg-red-100',
+    'bg-yellow-100',
     'border-gray-200',
+    'border-green-300',
+    'border-red-300',
+    'border-yellow-300',
     'text-gray-900',
+    'text-gray-500',
+    'text-gray-600',
+    'text-gray-700',
+    'text-red-500',
+    'text-red-800',
+    'text-green-800',
+    'text-yellow-800',
+    'text-blue-600',
+    'hover:bg-gray-100',
+    'hover:text-gray-900',
+    'z-50',
   ],
   theme: {
     extend: {
       colors: {
-        // Tableau-inspired color palette - Updated to match specifications
+        // Tableau-inspired color palette
         'tableau-blue': '#3b82f6',
         'tableau-orange': '#ff7f0e',
         'tableau-green': '#2ca02c',
@@ -25,6 +47,7 @@ module.exports = {
         'tableau-gray': '#f4f4f5',
         'tableau-olive': '#bcbd22',
         'tableau-cyan': '#17becf',
+        
         // Shadcn/UI color variables
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
@@ -59,7 +82,8 @@ module.exports = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        // Updated dashboard colors to match Tableau specifications
+        
+        // Updated dashboard colors
         'dashboard-bg': '#f4f4f5',
         'dashboard-card': '#ffffff',
         'dashboard-border': '#e2e8f0',
@@ -70,6 +94,7 @@ module.exports = {
         'dashboard-success': '#10b981',
         'dashboard-warning': '#f59e0b',
         'dashboard-error': '#ef4444',
+        
         // Chart colors
         chart: {
           '1': 'hsl(var(--chart-1))',
@@ -78,6 +103,7 @@ module.exports = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        
         // Sidebar colors
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar))',
@@ -95,7 +121,6 @@ module.exports = {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
       },
       spacing: {
-        // Clean spacing scale
         '18': '4.5rem',
         '72': '18rem',
         '84': '21rem',
@@ -122,7 +147,6 @@ module.exports = {
         'sm': 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        // Updated subtle shadows as requested
         'tableau': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         'tableau-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         'tableau-xl': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,30 +8,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Core business entities
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  username    String   @unique
-  firstName   String?
-  lastName    String?
-  role        UserRole @default(ANALYST)
-  isActive    Boolean  @default(true)
-  lastLogin   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String            @id @default(cuid())
+  email            String            @unique
+  username         String            @unique
+  firstName        String?
+  lastName         String?
+  role             UserRole          @default(ANALYST)
+  isActive         Boolean           @default(true)
+  lastLogin        DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  auditLogs        AuditLog[]
+  createdCustomers Customer[]
+  pricingAnalyses  PricingAnalysis[]
+  createdRFPs      RFP[]
+  sessions         Session[]
 
-  // Relationships
-  sessions          Session[]
-  auditLogs         AuditLog[]
-  createdCustomers  Customer[]
-  createdRFPs       RFP[]
-  pricingAnalyses   PricingAnalysis[]
-  
-  @@map("users")
   @@index([email])
   @@index([role])
   @@index([isActive])
+  @@map("users")
 }
 
 model Session {
@@ -46,48 +37,43 @@ model Session {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
-  // Relationships
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("sessions")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([expiresAt])
+  @@map("sessions")
 }
 
 model Customer {
-  id                    String      @id @default(cuid())
-  hoaName               String
-  fullAddress           String
-  city                  String?
-  state                 String?
-  zipCode               String?
-  latitude              Float?
-  longitude             Float?
-  monthlyRevenue        Decimal     @db.Decimal(10,2)
-  avgCompletionTime     Float       // minutes
-  serviceStatus         ServiceStatus @default(PENDING)
-  unitType              UnitType?
-  customerType          CustomerType @default(HOA)
-  numberOfUnits         Int?
-  contactEmail          String?
-  contactPhone          String?
-  contractStartDate     DateTime?
-  contractEndDate       DateTime?
-  isActive              Boolean     @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-  createdById           String
+  id                String            @id @default(cuid())
+  hoaName           String
+  fullAddress       String
+  city              String?
+  state             String?
+  zipCode           String?
+  latitude          Float?
+  longitude         Float?
+  monthlyRevenue    Decimal           @db.Decimal(10, 2)
+  avgCompletionTime Float
+  serviceStatus     ServiceStatus     @default(PENDING)
+  unitType          UnitType?
+  customerType      CustomerType      @default(HOA)
+  numberOfUnits     Int?
+  contactEmail      String?
+  contactPhone      String?
+  contractStartDate DateTime?
+  contractEndDate   DateTime?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  createdById       String
+  services          CustomerService[]
+  createdBy         User              @relation(fields: [createdById], references: [id])
+  pricingAnalyses   PricingAnalysis[]
+  rfps              RFP[]
+  routeAssignments  RouteAssignment[]
+  serviceHistory    ServiceHistory[]
 
-  // Relationships
-  createdBy           User                @relation(fields: [createdById], references: [id])
-  services            CustomerService[]
-  rfps                RFP[]
-  pricingAnalyses     PricingAnalysis[]
-  routeAssignments    RouteAssignment[]
-  serviceHistory      ServiceHistory[]
-  
-  @@map("customers")
   @@index([hoaName])
   @@index([serviceStatus])
   @@index([customerType])
@@ -95,186 +81,173 @@ model Customer {
   @@index([monthlyRevenue])
   @@index([isActive])
   @@index([createdAt])
+  @@map("customers")
 }
 
 model CustomerService {
-  id                  String   @id @default(cuid())
-  customerId          String
-  serviceType         ServiceType
-  frequency           ServiceFrequency
-  trashSize           Int?     // gallons
-  recyclingSize       Int?     // gallons
-  yardWasteRequired   Boolean  @default(false)
-  isWalkout           Boolean  @default(false)
-  isGated             Boolean  @default(false)
-  hasSpecialContainers Boolean @default(false)
-  specialRequirements Json?
-  monthlyPrice        Decimal  @db.Decimal(10,2)
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                   String           @id @default(cuid())
+  customerId           String
+  serviceType          ServiceType
+  frequency            ServiceFrequency
+  trashSize            Int?
+  recyclingSize        Int?
+  yardWasteRequired    Boolean          @default(false)
+  isWalkout            Boolean          @default(false)
+  isGated              Boolean          @default(false)
+  hasSpecialContainers Boolean          @default(false)
+  specialRequirements  Json?
+  monthlyPrice         Decimal          @db.Decimal(10, 2)
+  isActive             Boolean          @default(true)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  customer             Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  // Relationships
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  @@map("customer_services")
   @@index([customerId])
   @@index([serviceType])
   @@index([frequency])
   @@index([isActive])
+  @@map("customer_services")
 }
 
 model RFP {
-  id                    String     @id @default(cuid())
-  customerId            String?
-  title                 String
-  description           Text?
-  location              String
-  estimatedHomes        Int?
-  unitType              UnitType?
-  serviceType           ServiceType
-  frequency             ServiceFrequency
-  contractValue         Decimal?   @db.Decimal(12,2)
-  contractLength        Int?       // months
-  startDate             DateTime?
-  endDate               DateTime?
-  bidDeadline           DateTime?
-  status                RFPStatus  @default(DRAFT)
-  requirements          Json?
-  documents             Json?      // file paths/URLs
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
-  createdById           String
+  id              String            @id @default(cuid())
+  customerId      String?
+  title           String
+  description     String?
+  location        String
+  estimatedHomes  Int?
+  unitType        UnitType?
+  serviceType     ServiceType
+  frequency       ServiceFrequency
+  contractValue   Decimal?          @db.Decimal(12, 2)
+  contractLength  Int?
+  startDate       DateTime?
+  endDate         DateTime?
+  bidDeadline     DateTime?
+  status          RFPStatus         @default(DRAFT)
+  requirements    Json?
+  documents       Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdById     String
+  pricingAnalyses PricingAnalysis[]
+  createdBy       User              @relation(fields: [createdById], references: [id])
+  customer        Customer?         @relation(fields: [customerId], references: [id])
 
-  // Relationships
-  customer          Customer?         @relation(fields: [customerId], references: [id])
-  createdBy         User              @relation(fields: [createdById], references: [id])
-  pricingAnalyses   PricingAnalysis[]
-  
-  @@map("rfps")
   @@index([status])
   @@index([serviceType])
   @@index([bidDeadline])
   @@index([createdAt])
+  @@map("rfps")
 }
 
 model PricingAnalysis {
-  id                  String   @id @default(cuid())
-  customerId          String?
-  rfpId               String?
-  analysisType        AnalysisType
-  unitCount           Int
-  basePrice           Decimal  @db.Decimal(10,2)
-  walkoutPremium      Decimal  @db.Decimal(10,2) @default(0)
-  gatedPremium        Decimal  @db.Decimal(10,2) @default(0)
-  specialContainerPremium Decimal @db.Decimal(10,2) @default(0)
-  totalMonthlyRevenue Decimal  @db.Decimal(10,2)
-  marginPercent       Float
-  confidenceLevel     ConfidenceLevel
-  riskFlags           Json?
-  recommendations     Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  createdById         String
+  id                      String          @id @default(cuid())
+  customerId              String?
+  rfpId                   String?
+  analysisType            AnalysisType
+  unitCount               Int
+  basePrice               Decimal         @db.Decimal(10, 2)
+  walkoutPremium          Decimal         @default(0) @db.Decimal(10, 2)
+  gatedPremium            Decimal         @default(0) @db.Decimal(10, 2)
+  specialContainerPremium Decimal         @default(0) @db.Decimal(10, 2)
+  totalMonthlyRevenue     Decimal         @db.Decimal(10, 2)
+  marginPercent           Float
+  confidenceLevel         ConfidenceLevel
+  riskFlags               Json?
+  recommendations         Json?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  createdById             String
+  createdBy               User            @relation(fields: [createdById], references: [id])
+  customer                Customer?       @relation(fields: [customerId], references: [id])
+  rfp                     RFP?            @relation(fields: [rfpId], references: [id])
 
-  // Relationships
-  customer  Customer? @relation(fields: [customerId], references: [id])
-  rfp       RFP?      @relation(fields: [rfpId], references: [id])
-  createdBy User      @relation(fields: [createdById], references: [id])
-  
-  @@map("pricing_analyses")
   @@index([customerId])
   @@index([rfpId])
   @@index([analysisType])
   @@index([confidenceLevel])
   @@index([createdAt])
+  @@map("pricing_analyses")
 }
 
 model Route {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  driverId        String?
-  vehicleId       String?
-  estimatedTime   Int?     // minutes
-  estimatedMiles  Float?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String            @id @default(cuid())
+  name           String
+  description    String?
+  driverId       String?
+  vehicleId      String?
+  estimatedTime  Int?
+  estimatedMiles Float?
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  assignments    RouteAssignment[]
 
-  // Relationships
-  assignments RouteAssignment[]
-  
-  @@map("routes")
   @@index([driverId])
   @@index([vehicleId])
   @@index([isActive])
+  @@map("routes")
 }
 
 model RouteAssignment {
-  id         String   @id @default(cuid())
-  routeId    String
-  customerId String
-  order      Int      // stop order on route
-  estimatedTime Int?  // minutes for this stop
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(cuid())
+  routeId       String
+  customerId    String
+  order         Int
+  estimatedTime Int?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  route         Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
 
-  // Relationships
-  route    Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  @@map("route_assignments")
   @@unique([routeId, customerId])
   @@index([routeId])
   @@index([customerId])
   @@index([order])
+  @@map("route_assignments")
 }
 
 model ServiceHistory {
-  id              String      @id @default(cuid())
-  customerId      String
-  serviceDate     DateTime
-  serviceType     ServiceType
-  completionTime  Int?        // minutes
-  driverId        String?
-  vehicleId       String?
-  status          ServiceHistoryStatus
-  notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String               @id @default(cuid())
+  customerId     String
+  serviceDate    DateTime
+  serviceType    ServiceType
+  completionTime Int?
+  driverId       String?
+  vehicleId      String?
+  status         ServiceHistoryStatus
+  notes          String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  customer       Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  // Relationships
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  @@map("service_history")
   @@index([customerId])
   @@index([serviceDate])
   @@index([serviceType])
   @@index([status])
+  @@map("service_history")
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String
-  resource  String   // table/model name
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  resource   String
   resourceId String?
-  oldValues Json?
-  newValues Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 
-  // Relationships
-  user User @relation(fields: [userId], references: [id])
-  
-  @@map("audit_logs")
   @@index([userId])
   @@index([action])
   @@index([resource])
   @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model SystemConfig {
@@ -285,13 +258,12 @@ model SystemConfig {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  @@map("system_config")
+
   @@index([key])
   @@index([isActive])
+  @@map("system_config")
 }
 
-// Enums
 enum UserRole {
   ADMIN
   ANALYST

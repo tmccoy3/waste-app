@@ -42,7 +42,7 @@ export function DashboardNavigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="bg-white border-b border-gray-200 mb-6">
+          <nav className="bg-[#ffffff] border-b border-gray-200 mb-6">
       <div className="px-6 py-4">
         <div className="flex space-x-8">
           {navItems.map((item) => {

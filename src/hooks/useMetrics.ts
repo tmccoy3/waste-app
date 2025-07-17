@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useCallback, useState, useEffect } from 'react'
-import { CustomerData } from '../app/api/customers/route'
+import { CustomerData } from '../lib/api/google-sheets-customers'
 
 interface MetricResult<T> {
   data: T | null

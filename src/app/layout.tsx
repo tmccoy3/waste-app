@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Sidebar from "@/components/sidebar";
+import { DashboardNavigation } from "@/components/DashboardNavigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,10 +17,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-slate-50 text-slate-900">
-          {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-background`}>
+        <div className="min-h-screen bg-background">
+          <Sidebar />
+          <main className="ml-64 min-h-screen">
+            <DashboardNavigation />
+            <div className="p-6 space-y-6">
+              {children}
+            </div>
+          </main>
         </div>
       </body>
     </html>

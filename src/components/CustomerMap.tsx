@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { GoogleMap, LoadScript, Marker, InfoWindow, MarkerClusterer } from '@react-google-maps/api'
-import { CustomerData } from '../app/api/customers/route'
+import { CustomerData } from '../lib/api/google-sheets-customers'
 import { facilities } from '../lib/facilities'
 import CustomerMapFallback from './CustomerMapFallback'
 
@@ -85,10 +85,10 @@ export default function CustomerMap({ googleMapsApiKey, customers, onRefresh, la
   // Calculate KPI metrics
   const totalRevenue = filteredCustomers.reduce((sum, c) => sum + c.monthlyRevenue, 0)
   const avgTimeOnSite = filteredCustomers.length > 0 
-    ? Math.round(filteredCustomers.reduce((sum, c) => sum + c.completionTime, 0) / filteredCustomers.length)
+    ? Math.round(filteredCustomers.reduce((sum, c) => sum + (c.completionTime || 0), 0) / filteredCustomers.length)
     : 0
   const avgRevenuePerMinute = filteredCustomers.length > 0
-    ? filteredCustomers.reduce((sum, c) => sum + calculateRevenuePerMinute(c.monthlyRevenue, c.completionTime), 0) / filteredCustomers.length
+    ? filteredCustomers.reduce((sum, c) => sum + calculateRevenuePerMinute(c.monthlyRevenue, c.completionTime || 0), 0) / filteredCustomers.length
     : 0
   const totalLocations = filteredCustomers.length
 
@@ -111,7 +111,7 @@ export default function CustomerMap({ googleMapsApiKey, customers, onRefresh, la
   const createMarkerIcon = (customer: CustomerData) => {
     if (typeof window === 'undefined' || !window.google || !window.google.maps || !window.google.maps.Size || !window.google.maps.Point) return undefined
     
-    const revenuePerMinute = calculateRevenuePerMinute(customer.monthlyRevenue, customer.completionTime)
+    const revenuePerMinute = calculateRevenuePerMinute(customer.monthlyRevenue, customer.completionTime || 0)
     const profitability = getProfitabilityTag(revenuePerMinute)
     const color = customer.type === 'HOA' ? '#dc2626' : '#10b981'
     const size = Math.max(24, Math.min(36, customer.monthlyRevenue / 150)) // Size based on revenue
@@ -321,11 +321,11 @@ export default function CustomerMap({ googleMapsApiKey, customers, onRefresh, la
                   <div className="customer-stat">
                     <span className="customer-stat-label">Revenue/Min:</span>
                     <span className="customer-stat-value">
-                      ${calculateRevenuePerMinute(selectedCustomer.monthlyRevenue, selectedCustomer.completionTime).toFixed(2)}
+                      ${calculateRevenuePerMinute(selectedCustomer.monthlyRevenue, selectedCustomer.completionTime || 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="profitability-tag">
-                    {getProfitabilityTag(calculateRevenuePerMinute(selectedCustomer.monthlyRevenue, selectedCustomer.completionTime)).tag}
+                    {getProfitabilityTag(calculateRevenuePerMinute(selectedCustomer.monthlyRevenue, selectedCustomer.completionTime || 0)).tag}
                   </div>
                 </div>
               </div>
